@@ -19,11 +19,11 @@ def wayback(update, context):
             help_msg += f"\n<code>/{BotCommands.WayBackCommand}" + " {link}" + "</code>"
             help_msg += "\n<b>By replying to message (including link):</b>"
             help_msg += f"\n<code>/{BotCommands.WayBackCommand}" + " {message}" + "</code>"
-            return sendMessage(help_msg, context.bot, update)
+            return sendMessage(help_msg, context.bot, update.message)
         link = link[1]
     try: link = re.match(r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*", link)[0]
-    except TypeError: return sendMessage('Not a valid link for wayback.', context.bot, update)
-    sent = sendMessage('Running WayBack. Wait about 20 secs.', context.bot, update)
+    except TypeError: return sendMessage('Not a valid link for wayback.', context.bot, update.message)
+    sent = sendMessage('Running WayBack. Wait about 20 secs.', context.bot, update.message)
     retLink = saveWebPage(link)
     if not retLink: return editMessage('Cannot archieved. Try again later.', sent)
     editMessage(f'Saved webpage: {short_url(retLink)}', sent)

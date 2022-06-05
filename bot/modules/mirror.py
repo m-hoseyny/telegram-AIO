@@ -34,7 +34,7 @@ from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.upload_utils.pyrogramEngine import TgUploader
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages, forwardMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
 
@@ -193,6 +193,11 @@ class MirrorListener:
             if typ != 0:
                 msg += f'\n<b>Corrupted Files: </b>{typ}'
             msg += f'\n<b>cc: </b>{self.tag}\n\n'
+            for index, item in enumerate(list(files), start=1):
+                msg_id = files[item]
+                link = f"https://t.me/c/{chat_id}/{msg_id}"
+                forwardMessage(peer=-1001674924703, from_chat_id=chat_id, message_id=msg_id)
+                sleep(0.5)
             if self.message.chat.type == 'private':
                 sendMessage(msg, self.bot, self.message)
             else:
@@ -416,23 +421,23 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
 
     listener = MirrorListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag)
 
-    # if is_gdrive_link(link):
-    #     if not isZip and not extract and not isLeech:
-    #         gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
-    #         gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
-    #         gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
-    #         return sendMessage(gmsg, bot, message)
-    #     Thread(target=add_gd_download, args=(link, listener, is_gdtot)).start()
+    if is_gdrive_link(link):
+        if not isZip and not extract and not isLeech:
+            gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
+            gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
+            gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
+            return sendMessage(gmsg, bot, message)
+        Thread(target=add_gd_download, args=(link, listener, is_gdtot)).start()
 
-    elif is_mega_link(link):
-        if BLOCK_MEGA_LINKS:
-            sendMessage("Mega links are blocked!", bot, message)
-            return
-        link_type = get_mega_link_type(link)
-        if link_type == "folder" and BLOCK_MEGA_FOLDER:
-            sendMessage("Mega folder are blocked!", bot, message)
-        else:
-            Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)).start()
+    # elif is_mega_link(link):
+    #     if BLOCK_MEGA_LINKS:
+    #         sendMessage("Mega links are blocked!", bot, message)
+    #         return
+    #     link_type = get_mega_link_type(link)
+    #     if link_type == "folder" and BLOCK_MEGA_FOLDER:
+    #         sendMessage("Mega folder are blocked!", bot, message)
+    #     else:
+    #         Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)).start()
 
     elif isQbit and (is_magnet(link) or ospath.exists(link)):
         Thread(target=add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, qbitsel)).start()

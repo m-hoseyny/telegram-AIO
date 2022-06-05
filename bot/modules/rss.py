@@ -4,7 +4,7 @@ from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
 from threading import Lock
 
-from bot import dispatcher, job_queue, rss_dict, LOGGER, DB_URI, RSS_DELAY, RSS_CHAT_ID, RSS_COMMAND
+from bot import dispatcher, job_queue, rss_dict, LOGGER, DB_URI, RSS_DELAY, RSS_CHAT_ID, RSS_COMMAND, client_app
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss, sendMarkup
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -220,6 +220,10 @@ def rss_monitor(context):
                     feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title'].replace('>', '').replace('<', '')}</code>\n\n"
                     feed_msg += f"<b>Link: </b><code>{url}</code>"
                 sendRss(feed_msg, context.bot)
+                try:
+                    client_app.send_message(chat_id='@GemAIOBot', text=f'/leech {url}')
+                except:
+                    pass
                 feed_count += 1
                 sleep(5)
             DbManger().rss_update(name, str(last_link), str(last_title))
