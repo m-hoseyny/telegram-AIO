@@ -132,8 +132,9 @@ def get_readable_message():
                 MirrorStatus.STATUS_EXTRACTING,
                 MirrorStatus.STATUS_SPLITTING,
                 MirrorStatus.STATUS_SEEDING,
+                MirrorStatus.STATUS_WAITING,
             ]:
-                msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
+                # msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
                 if download.status() == MirrorStatus.STATUS_CLONING:
                     msg += f"\n<b>Cloned:</b> {get_readable_file_size(download.processed_bytes())} / {download.size()}"
                 elif download.status() == MirrorStatus.STATUS_UPLOADING:
@@ -164,6 +165,8 @@ def get_readable_message():
             msg += "\n\n"
             if STATUS_LIMIT is not None and index == STATUS_LIMIT:
                 break
+            if len(msg) > 3500:
+                break
         total, used, free, _ = disk_usage('.')
         free = get_readable_file_size(free)
         currentTime = get_readable_time(time() - botStartTime)
@@ -191,6 +194,7 @@ def get_readable_message():
             buttons.sbutton("▶️", "status nex")
             button = InlineKeyboardMarkup(buttons.build_menu(2))
             return msg + bmsg, button
+        
         return msg + bmsg, ""
 
 def turn(data):

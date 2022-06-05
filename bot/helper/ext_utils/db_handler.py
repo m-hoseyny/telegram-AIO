@@ -1,5 +1,6 @@
 from os import path as ospath, makedirs
-from psycopg2 import connect, DatabaseError
+# from psycopg2 import connect, DatabaseError
+import sqlite3
 
 from bot import DB_URI, AUTHORIZED_CHATS, SUDO_USERS, AS_DOC_USERS, AS_MEDIA_USERS, rss_dict, LOGGER
 
@@ -10,9 +11,10 @@ class DbManger:
 
     def connect(self):
         try:
-            self.conn = connect(DB_URI)
+            self.conn = sqlite3.connect(DB_URI)
             self.cur = self.conn.cursor()
-        except DatabaseError as error:
+        # except DatabaseError as error:
+        except Exception as error:
             LOGGER.error(f"Error in DB connection: {error}")
             self.err = True
 
@@ -178,23 +180,21 @@ class DbManger:
     def rss_add(self, name, link, last, title, filters):
         if self.err:
             return
-        q = (name, link, last, title, filters)
-        self.cur.execute("INSERT INTO rss (name, link, last, title, filters) VALUES (%s, %s, %s, %s, %s)", q)
+        self.cur.execute("INSERT INTO rss (name, link, last, title, filters) VALUES ('{}', '{}', '{}', '{}', '{}')".format(name, link, last, title, filters))
         self.conn.commit()
         self.disconnect()
 
     def rss_update(self, name, last, title):
         if self.err:
             return
-        q = (last, title, name)
-        self.cur.execute("UPDATE rss SET last = %s, title = %s WHERE name = %s", q)
+        self.cur.execute("UPDATE rss SET last = '{}', title = '{}' WHERE name = '{}'".format(last, title, name))
         self.conn.commit()
         self.disconnect()
 
     def rss_delete(self, name: str):
         if self.err:
             return
-        self.cur.execute("DELETE FROM rss WHERE name = %s", (name,))
+        self.cur.execute("DELETE FROM rss WHERE name = '{}'".format(name))
         self.conn.commit()
         self.disconnect()
 

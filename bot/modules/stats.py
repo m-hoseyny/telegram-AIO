@@ -105,7 +105,7 @@ def stats(update, context):
             f'<b>Memory Used:</b> {mem_u}\n'
     heroku = getHerokuDetails(HEROKU_API_KEY, HEROKU_APP_NAME)
     if heroku: stats += heroku
-    sendMessage(stats, context.bot, update)
+    sendMessage(stats, context.bot, update.message)
 
 stats_handler = CommandHandler(BotCommands.StatsCommand, stats,
     filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)

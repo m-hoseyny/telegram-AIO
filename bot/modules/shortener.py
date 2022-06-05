@@ -34,15 +34,15 @@ def shortener(update, context):
             help_msg += f"\n<code>/{BotCommands.ShortenerCommand}" + " {message}" + "</code>"
             help_msg += "\nAll supported domains: " + free 
             help_msg += "\nRequires APIKEY: " + apireq
-            return sendMessage(help_msg, context.bot, update)
+            return sendMessage(help_msg, context.bot, update.message)
         if len(link) == 2:
             link = link[1]
         if len(link) == 3:
             domain = link[1]
             link = link[2]
     try: link = re.match(r"((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*", link)[0]
-    except TypeError: return sendMessage('Not a valid link.', context.bot, update)
-    return sendMessage(short_url(link, domain), context.bot, update)
+    except TypeError: return sendMessage('Not a valid link.', context.bot, update.message)
+    return sendMessage(short_url(link, domain), context.bot, update.message)
 
 
 shortener_handler = CommandHandler(BotCommands.ShortenerCommand, shortener,

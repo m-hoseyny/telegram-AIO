@@ -19,7 +19,7 @@ def list_folder(update,context):
 
         return
 
-    reply = sendMessage('<b>Searching...🔎</b>', context.bot, update)
+    reply = sendMessage('<b>Searching...🔎</b>', context.bot, update.message)
 
     LOGGER.info(f"Searching: {search}")
 

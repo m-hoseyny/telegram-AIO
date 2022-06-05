@@ -53,6 +53,7 @@ try:
 except KeyError:
     SERVER_PORT = 80
 
+LOGGER.info('Initializing the processes')
 PORT = environ.get('PORT', SERVER_PORT)
 web = Popen([f"gunicorn web.wserver:app --bind 0.0.0.0:{PORT}"], shell=True)
 alive = Popen(["python3", "alive.py"])
@@ -63,7 +64,9 @@ srun(["cp", ".netrc", "/root/.netrc"])
 srun(["chmod", "600", ".netrc"])
 srun(["chmod", "+x", "aria.sh"])
 a2c = Popen(["./aria.sh"], shell=True)
+LOGGER.info('Initializing finished... Going to sleep for 1 sec')
 sleep(1)
+
 
 Interval = []
 DRIVES_NAMES = []
@@ -92,7 +95,7 @@ trackers = check_output(["curl -Ns https://raw.githubusercontent.com/XIU2/Tracke
 trackerslist = set(trackers.split("\n"))
 trackerslist.remove("")
 trackerslist = "\n\n".join(trackerslist)
-get_client().application.set_preferences({"add_trackers": f"{trackerslist}"})
+# get_client().application.set_preferences({"add_trackers": f"{trackerslist}"})
 
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
@@ -154,6 +157,7 @@ except KeyError as e:
 
 LOGGER.info("Generating BOT_STRING_SESSION")
 app = Client('pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, no_updates=True)
+client_app = Client('pyrogram_client', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, phone_number='+79919810672')
 
 try:
     USER_STRING_SESSION = getConfig('USER_STRING_SESSION')

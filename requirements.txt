@@ -30,3 +30,5 @@ tenacity
 tgCrypto
 urllib3
 yt-dlp
+mega.py
+waybackpy

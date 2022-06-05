@@ -198,9 +198,9 @@ def virustotal(update, context):
             maxsize = 210*1024*1024
             if VIRUSTOTAL_FREE: maxsize = 32*1024*1024
             if message.reply_to_message.document.file_size > maxsize:
-                return sendMessage(f"File limit is {humanbytes(maxsize)}", context.bot, update)
+                return sendMessage(f"File limit is {humanbytes(maxsize)}", context.bot, update.message)
             try:
-                sent = sendMessage(f"Trying to download. Please wait.", context.bot, update)
+                sent = sendMessage(f"Trying to download. Please wait.", context.bot, update.message)
                 filename = os.path.join(VtPath, message.reply_to_message.document.file_name)
                 link = app.download_media(message=message.reply_to_message.document, file_name=filename)
             except Exception as e: LOGGER.error(e)

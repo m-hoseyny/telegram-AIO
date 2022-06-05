@@ -11,7 +11,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage, deleteMessage, sendPhoto, editMessage
 
 def speedtest(update, context):
-    speed = sendMessage("Running Speed Test. Wait about 20 secs.", context.bot, update)
+    speed = sendMessage("Running Speed Test. Wait about 20 secs.", context.bot, update.message)
     test = Speedtest()
     test.get_best_server()
     test.download()

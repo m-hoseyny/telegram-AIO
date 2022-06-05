@@ -12,6 +12,7 @@ from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper import button_build
 
 rss_dict_lock = Lock()
+BLOCKED_CATEGORIES = ['music', 'xxx', 'book']
 
 def rss_list(update, context):
     if len(rss_dict) > 0:
@@ -192,6 +193,9 @@ def rss_monitor(context):
             feed_count = 0
             while True:
                 try:
+                    if rss_d.entries[feed_count].get('category') and any(x in str(rss_d.entries[feed_count]['category']).lower() for x in BLOCKED_CATEGORIES):
+                        parse = False
+                        feed_count += 1
                     if data[1] == rss_d.entries[feed_count]['link'] or data[2] == rss_d.entries[feed_count]['title']:
                         break
                 except IndexError:

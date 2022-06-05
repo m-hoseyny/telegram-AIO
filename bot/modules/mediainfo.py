@@ -21,7 +21,7 @@ def mediainfo(update, context):
     # mediainfo control -
     help_msg = "\n<b>By replying to message (including media):</b>"
     help_msg += f"\n<code>/{BotCommands.MediaInfoCommand}" + " {message}" + "</code>"
-    if not mediamessage: return sendMessage(help_msg, context.bot, update)
+    if not mediamessage: return sendMessage(help_msg, context.bot, update.message)
     file = None
     media_array = [mediamessage.document, mediamessage.video, mediamessage.audio, mediamessage.document, \
         mediamessage.video, mediamessage.photo, mediamessage.audio, mediamessage.voice, \
@@ -30,8 +30,8 @@ def mediainfo(update, context):
         if i is not None:
             file = i
             break
-    if not file: return sendMessage(help_msg, context.bot, update)
-    sent = sendMessage('Running mediainfo. Downloading your file.', context.bot, update)
+    if not file: return sendMessage(help_msg, context.bot, update.message)
+    sent = sendMessage('Running mediainfo. Downloading your file.', context.bot, update.message)
     try:
         VtPath = os.path.join("Mediainfo", str(message.from_user.id))
         if not os.path.exists("Mediainfo"): os.makedirs("Mediainfo")

@@ -5,7 +5,7 @@ from telegram.error import RetryAfter
 from pyrogram.errors import FloodWait
 
 from bot import AUTO_DELETE_MESSAGE_DURATION, LOGGER, status_reply_dict, status_reply_dict_lock, \
-                Interval, DOWNLOAD_STATUS_UPDATE_INTERVAL, RSS_CHAT_ID, rss_session, bot
+                Interval, DOWNLOAD_STATUS_UPDATE_INTERVAL, RSS_CHAT_ID, rss_session, bot, app
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 
 
@@ -22,8 +22,19 @@ def sendMessage(text: str, bot, message: Message):
         LOGGER.error(str(e))
         return
 
+def forwardMessage(peer, from_chat_id, message_id):
+    try:
+        return app.copy_message(chat_id=peer,
+                            from_chat_id=from_chat_id,
+                            message_id=message_id
+                            )
+    except Exception as e:
+        LOGGER.error(str(e))
+        return
+
 def sendMarkup(text: str, bot, message: Message, reply_markup: InlineKeyboardMarkup):
     try:
+        LOGGER.info("Sending MEssage")
         return bot.send_message(message.chat_id,
                             reply_to_message_id=message.message_id,
                             text=text, reply_markup=reply_markup, allow_sending_without_reply=True,

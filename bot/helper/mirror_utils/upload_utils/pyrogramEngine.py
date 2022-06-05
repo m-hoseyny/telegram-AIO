@@ -3,6 +3,7 @@ import logging
 from os import remove as osremove, walk, path as ospath, rename as osrename
 from time import time, sleep
 from pyrogram.errors import FloodWait, RPCError
+from pyrogram.enums import ParseMode
 from PIL import Image
 from threading import RLock
 
@@ -53,7 +54,8 @@ class TgUploader:
                 self.__upload_file(up_path, file_, dirpath)
                 if self.__is_cancelled:
                     return
-                self.__msgs_dict[file_] = self.__sent_msg.message_id
+                if file_.upper().endswith(VIDEO_SUFFIXES):
+                    self.__msgs_dict[file_] = self.__sent_msg.id
                 self._last_uploaded = 0
                 sleep(1)
         if len(self.__msgs_dict) <= self.__corrupted:
@@ -96,7 +98,7 @@ class TgUploader:
                     self.__sent_msg = self.__sent_msg.reply_video(video=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
-                                                              parse_mode="html",
+                                                              parse_mode=ParseMode.HTML,
                                                               duration=duration,
                                                               width=width,
                                                               height=height,
@@ -109,7 +111,7 @@ class TgUploader:
                     self.__sent_msg = self.__sent_msg.reply_audio(audio=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
-                                                              parse_mode="html",
+                                                              parse_mode=ParseMode.HTML,
                                                               duration=duration,
                                                               performer=artist,
                                                               title=title,
@@ -117,15 +119,16 @@ class TgUploader:
                                                               disable_notification=True,
                                                               progress=self.__upload_progress)
                 elif file_.upper().endswith(IMAGE_SUFFIXES):
+                    return
                     self.__sent_msg = self.__sent_msg.reply_photo(photo=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
-                                                              parse_mode="html",
+                                                              parse_mode=ParseMode.HTML,
                                                               disable_notification=True,
                                                               progress=self.__upload_progress)
                 else:
-                    notMedia = True
-            if self.__as_doc or notMedia:
+                    notMedia = False
+            if self.__as_doc or notMedia or file_.upper().endswith('ZIP'):
                 if file_.upper().endswith(VIDEO_SUFFIXES) and thumb is None:
                     thumb = take_ss(up_path)
                     if self.__is_cancelled:
@@ -136,7 +139,7 @@ class TgUploader:
                                                              quote=True,
                                                              thumb=thumb,
                                                              caption=cap_mono,
-                                                             parse_mode="html",
+                                                             parse_mode=ParseMode.HTML,
                                                              disable_notification=True,
                                                              progress=self.__upload_progress)
         except FloodWait as f:
@@ -182,3 +185,6 @@ class TgUploader:
         self.__is_cancelled = True
         LOGGER.info(f"Cancelling Upload: {self.name}")
         self.__listener.onUploadError('your upload has been stopped!')
+
+    def send_message(self, text):
+        app.send_message(chat_id='GemAIOBot', text=text)

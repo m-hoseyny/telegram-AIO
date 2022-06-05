@@ -1,5 +1,6 @@
 from time import sleep
 from threading import Thread
+from tkinter import E
 
 from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, LOGGER, STORAGE_THRESHOLD
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -18,6 +19,14 @@ def __onDownloadStarted(api, gid):
             if not dl:
                 return
             download = api.get_download(gid)
+            try:
+                if download.size > 1.9 * 1024**3:
+                    LOGGER.info('File is more than 2 GB... ')
+                    dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
+                    api.remove([download], force=True, files=True)
+                    return sendMessage("Here are the search results:", dl.getListener().bot, dl.getListener().message)
+            except Exception as e:
+                LOGGER.error(f'There is error in sizing.. [{e}]')
             if STOP_DUPLICATE and not dl.getListener().isLeech:
                 LOGGER.info('Checking File/Folder if already in Drive...')
                 sname = download.name

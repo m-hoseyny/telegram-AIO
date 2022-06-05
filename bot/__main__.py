@@ -12,8 +12,8 @@ from sys import executable
 from telegram import ParseMode, InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 
-from wserver import start_server_async
-from bot import HEROKU_API_KEY, HEROKU_APP_NAME, bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, IS_VPS, PORT, alive, web, OWNER_ID, AUTHORIZED_CHATS, LOGGER, Interval, nox, rss_session, a2c
+# from wserver import start_server_async
+from bot import HEROKU_API_KEY, HEROKU_APP_NAME, bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, PORT, alive, web, OWNER_ID, AUTHORIZED_CHATS, LOGGER, Interval, rss_session, a2c, client_app
 from .helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.message_utils import auto_delete_message, sendMessage, sendMarkup, editMessage, sendLogFile
@@ -42,12 +42,12 @@ def start(update, context):
 This bot can mirror all your links to Google Drive!
 Type /{BotCommands.HelpCommand} to get a list of available commands
 '''
-        sendMarkup(start_string, context.bot, update, reply_markup)
+        sendMarkup(start_string, context.bot, update.message, reply_markup)
     else:
-        sendMarkup('Not Authorized user, deploy your own mirror-leech bot', context.bot, update, reply_markup)
+        sendMarkup('Not Authorized user, deploy your own mirror-leech bot', context.bot, update.message, reply_markup)
 
 def restart(update, context):
-    restart_message = sendMessage("Restarting...", context.bot, update)
+    restart_message = sendMessage("Restarting...", context.bot, update.message)
     if Interval:
         Interval[0].cancel()
     alive.kill()
@@ -57,7 +57,7 @@ def restart(update, context):
     procs.kill()
     clean_all()
     srun(["python3", "update.py"])
-    nox.kill()
+    # nox.kill()
     a2cproc = psprocess(a2c.pid)
     for proc in a2cproc.children(recursive=True):
         proc.kill()
@@ -70,13 +70,13 @@ def restart(update, context):
 
 def ping(update, context):
     start_time = int(round(time() * 1000))
-    reply = sendMessage("Starting Ping", context.bot, update)
+    reply = sendMessage("Starting Ping", context.bot, update.message)
     end_time = int(round(time() * 1000))
     editMessage(f'{end_time - start_time} ms', reply)
 
 
 def log(update, context):
-    sendLogFile(context.bot, update)
+    sendLogFile(context.bot, update.message)
 
 
 help_string_telegraph = f'''<br>
@@ -180,7 +180,7 @@ def bot_help(update, context):
     button = ButtonMaker()
     button.buildbutton("Other Commands", f"https://telegra.ph/{help}")
     reply_markup = InlineKeyboardMarkup(button.build_menu(1))
-    sendMarkup(help_string, context.bot, update, reply_markup)
+    sendMarkup(help_string, context.bot, update.message, reply_markup)
 
 botcmds = [
 
@@ -219,8 +219,8 @@ botcmds = [
 def main():
     # bot.set_my_commands(botcmds)
     start_cleanup()
-    if IS_VPS:
-        asyrun(start_server_async(PORT))
+    # if IS_VPS:
+    #     asyrun(start_server_async(PORT))
     # Check if the bot is restarting
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
@@ -257,5 +257,6 @@ def main():
         rss_session.start()
 
 app.start()
+client_app.start()
 main()
 idle()
