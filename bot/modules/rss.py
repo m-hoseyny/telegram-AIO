@@ -8,17 +8,19 @@ from bot import dispatcher, job_queue, rss_dict, LOGGER, DB_URI, RSS_DELAY, RSS_
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss, sendMarkup
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.db_handler import DbManger
+from bot.helper.ext_utils.db_handler import DbManger, FileHandler
 from bot.helper.telegram_helper import button_build
 
 rss_dict_lock = Lock()
-BLOCKED_CATEGORIES = ['music', 'xxx', 'book']
+BLOCKED_CATEGORIES = ['music', 'xxx', 'book', 'other']
+
+send_rss_file = FileHandler('rss.db')
 
 def rss_list(update, context):
     if len(rss_dict) > 0:
         list_feed = "<b>Your subscriptions: </b>\n\n"
         for title, url in list(rss_dict.items()):
-            list_feed += f"<b>Title:</b> <code>{title}</code>\n<b>Feed Url: </b><code>{url[0]}</code>\n\n"
+            list_feed += f"<b>Title:</b> <code>{title}</code>\n<b>Feed Url: </b><code>{url[0]}</code>\n<b>Last feed: </b><code>{url[1]}</code>\n<b>filters: </b><code>{url[3]}</code>\n\n"
         sendMessage(list_feed, context.bot, update.message)
     else:
         sendMessage("No subscriptions.", context.bot, update.message)
@@ -74,7 +76,8 @@ def rss_sub(update, context):
         exists = rss_dict.get(title)
         if exists is not None:
             LOGGER.error("This title already subscribed! Choose another title!")
-            return sendMessage("This title already subscribed! Choose another title!", context.bot, update.message)
+            DbManger().rss_update_filters(title, filters)
+            return sendMessage(f"This title already subscribed! Choose another title!\nFilters updated {filters}", context.bot, update.message)
         try:
             rss_d = feedparse(feed_link)
             sub_msg = "<b>Subscribed!</b>"
@@ -185,13 +188,17 @@ def rss_monitor(context):
         rss_saver = rss_dict
     for name, data in rss_saver.items():
         try:
+            LOGGER.info(f'Parsing... [{name}]')
             rss_d = feedparse(data[0])
+            if not rss_d.entries:
+                continue
             last_link = rss_d.entries[0]['link']
             last_title = rss_d.entries[0]['title']
             if data[1] == last_link or data[2] == last_title:
                 continue
             feed_count = 0
             while True:
+                parse = True
                 try:
                     if rss_d.entries[feed_count].get('category') and any(x in str(rss_d.entries[feed_count]['category']).lower() for x in BLOCKED_CATEGORIES):
                         parse = False
@@ -202,7 +209,11 @@ def rss_monitor(context):
                     LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {name}. \
                           Maybe you need to add less RSS_DELAY to not miss some torrents")
                     break
-                parse = True
+                if data[1] in send_rss_file.set:
+                    break
+                else:
+                    send_rss_file.append(data[1])
+                print(data[3])
                 for list in data[3]:
                     if not any(x in str(rss_d.entries[feed_count]['title']).lower() for x in list):
                         parse = False
@@ -222,10 +233,10 @@ def rss_monitor(context):
                 sendRss(feed_msg, context.bot)
                 try:
                     client_app.send_message(chat_id='@GemAIOBot', text=f'/leech {url}')
-                except:
+                except Exception as error:
+                    LOGGER.error(f'Error in sending message [{error}]')
                     pass
                 feed_count += 1
-                sleep(5)
             DbManger().rss_update(name, str(last_link), str(last_title))
             with rss_dict_lock:
                 rss_dict[name] = [data[0], str(last_link), str(last_title), data[3]]
