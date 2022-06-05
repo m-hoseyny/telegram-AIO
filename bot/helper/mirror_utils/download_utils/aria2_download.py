@@ -18,14 +18,14 @@ def __onDownloadStarted(api, gid):
             if not dl:
                 return
             download = api.get_download(gid)
-            try:
-                if download.size > 1.9 * 1024**3:
-                    LOGGER.info('File is more than 2 GB... ')
-                    dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
-                    api.remove([download], force=True, files=True)
-                    return sendMessage("Here are the search results:", dl.getListener().bot, dl.getListener().message)
-            except Exception as e:
-                LOGGER.error(f'There is error in sizing.. [{e}]')
+            # try:
+            #     if download.total_length > 1.9 * 1024**3:
+            #         LOGGER.info('File is more than 2 GB... ')
+            #         dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
+            #         api.remove([download], force=True, files=True)
+            #         return sendMessage("Here are the search results:", dl.getListener().bot, dl.getListener().message)
+            # except Exception as e:
+            #     LOGGER.error(f'There is error in sizing.. [{e}]')
             if STOP_DUPLICATE and not dl.getListener().isLeech:
                 LOGGER.info('Checking File/Folder if already in Drive...')
                 sname = download.name
@@ -81,6 +81,13 @@ def __onDownloadComplete(api, gid):
             dl = getDownloadByGid(new_gid)
         with download_dict_lock:
             download_dict[dl.uid()] = AriaDownloadStatus(new_gid, dl.getListener())
+        #     try:
+        #         if download_dict[dl.uid()].size_raw() > 1.9 * 1024**3:
+        #             LOGGER.info(f"Huge Size! [{new_gid}]")
+        #             download_dict[dl.uid()].cancel_download()
+        #             dl.getListener().onDownloadError('Huge File')
+        #     except Exception as error:
+        #         LOGGER.error(f"Size Error: {error}")
         LOGGER.info(f'Changed gid from {gid} to {new_gid}')
     elif dl:
         Thread(target=dl.getListener().onDownloadComplete).start()
@@ -124,6 +131,13 @@ def add_aria2c_download(link: str, path, listener, filename):
         return sendMessage(error, listener.bot, listener.message)
     with download_dict_lock:
         download_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
+        # try:
+        #     if download_dict[listener.uid].size_raw() > 1.9 * 1024**3:
+        #         LOGGER.info(f"Huge Size! [{filename}]")
+        #         download_dict[listener.uid].cancel_download()
+        #         download.getListener().onDownloadError('Huge File')
+        # except Exception as error:
+        #     LOGGER.error(f"Size Error: {error}")
         LOGGER.info(f"Started: {download.gid} DIR: {download.dir} ")
     sendStatusMessage(listener.message, listener.bot)
 

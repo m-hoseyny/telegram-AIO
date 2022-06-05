@@ -179,9 +179,10 @@ def aria2c_init():
         aria2.add_uris([link], {'dir': dire})
         sleep(3)
         downloads = aria2.get_downloads()
-        sleep(30)
+        sleep(10)
         for download in downloads:
             aria2.remove([download], force=True, files=True)
+            # download_dict['']
     except Exception as e:
         logging.error(f"Aria2c initializing error: {e}")
         pass

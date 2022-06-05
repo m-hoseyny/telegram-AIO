@@ -64,9 +64,11 @@ class TgUploader:
         self.__listener.onUploadComplete(None, size, self.__msgs_dict, None, self.__corrupted, self.name)
 
     def __upload_file(self, up_path, file_, dirpath):
+        file_ = file_.replace(',', '').replace('[', '.').replace(']', '.')
         if CUSTOM_FILENAME is not None:
             cap_mono = f"{CUSTOM_FILENAME} <code>{file_}</code>"
-            file_ = f"{CUSTOM_FILENAME} {file_}"
+            file_ = f"{CUSTOM_FILENAME}.{file_}"
+            file_ = file_.replace(' ', '.')
             new_path = ospath.join(dirpath, file_)
             osrename(up_path, new_path)
             up_path = new_path
@@ -92,20 +94,22 @@ class TgUploader:
                         width, height = get_video_resolution(up_path)
                     if not file_.upper().endswith(("MKV", "MP4")):
                         file_ = ospath.splitext(file_)[0] + '.mp4'
+                        file_ = file_.replace('_', '.').replace(' ', '.')
                         new_path = ospath.join(dirpath, file_)
                         osrename(up_path, new_path)
                         up_path = new_path
+                    print(up_path)
                     self.__sent_msg = self.__sent_msg.reply_video(video=up_path,
-                                                              quote=True,
-                                                              caption=cap_mono,
-                                                              parse_mode=ParseMode.HTML,
-                                                              duration=duration,
-                                                              width=width,
-                                                              height=height,
-                                                              thumb=thumb,
-                                                              supports_streaming=True,
-                                                              disable_notification=True,
-                                                              progress=self.__upload_progress)
+                                                                quote=True,
+                                                                caption=cap_mono,
+                                                                parse_mode=ParseMode.HTML,
+                                                                duration=duration,
+                                                                width=width,
+                                                                height=height,
+                                                                thumb=thumb,
+                                                                supports_streaming=True,
+                                                                disable_notification=True,
+                                                                progress=self.__upload_progress)
                 elif file_.upper().endswith(AUDIO_SUFFIXES):
                     duration , artist, title = get_media_info(up_path)
                     self.__sent_msg = self.__sent_msg.reply_audio(audio=up_path,

@@ -20,7 +20,7 @@ from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split as
 from bot.helper.ext_utils.shortenurl import short_url
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupportedExtractionArchive
 from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
-from bot.helper.mirror_utils.download_utils.mega_downloader import add_mega_download
+# from bot.helper.mirror_utils.download_utils.mega_downloader import add_mega_download
 from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_utils.download_utils.qbit_downloader import add_qb_torrent
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
@@ -195,11 +195,12 @@ class MirrorListener:
             msg += f'\n<b>cc: </b>{self.tag}\n\n'
             for index, item in enumerate(list(files), start=1):
                 msg_id = files[item]
-                link = f"https://t.me/c/{chat_id}/{msg_id}"
+                chat_id = str(self.message.chat.id)
                 forwardMessage(peer=-1001674924703, from_chat_id=chat_id, message_id=msg_id)
                 sleep(0.5)
             if self.message.chat.type == 'private':
-                sendMessage(msg, self.bot, self.message)
+                pass
+                # sendMessage(msg, self.bot, self.message)
             else:
                 chat_id = str(self.message.chat.id)[4:]
                 fmsg = ''

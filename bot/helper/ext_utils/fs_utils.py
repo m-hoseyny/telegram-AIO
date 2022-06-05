@@ -2,14 +2,15 @@ from os import remove as osremove, path as ospath, mkdir, walk, listdir, rmdir, 
 from sys import exit as sysexit
 from json import loads as jsnloads
 from shutil import rmtree, disk_usage
-from PIL import Image
+from PIL import Image, ImageDraw , ImageFont, ImageFilter, ImageChops
 from magic import Magic
 from subprocess import run as srun, check_output
 from time import time
 from math import ceil
+import requests
 
 from .exceptions import NotSupportedExtractionArchive
-from bot import aria2, LOGGER, DOWNLOAD_DIR, get_client, TG_SPLIT_SIZE, EQUAL_SPLITS, STORAGE_THRESHOLD
+from bot import aria2, LOGGER, DOWNLOAD_DIR, get_client, TG_SPLIT_SIZE, EQUAL_SPLITS, STORAGE_THRESHOLD, CUSTOM_FILENAME
 
 VIDEO_SUFFIXES = ("M4V", "MP4", "MOV", "FLV", "WMV", "3GP", "MPG", "WEBM", "MKV", "AVI")
 
@@ -168,6 +169,41 @@ def get_mime_type(file_path):
     mime_type = mime_type or "text/plain"
     return mime_type
 
+
+def add_markup(des_dir):
+    try:
+        img = Image.open(des_dir)
+        # draw = ImageDraw.Draw(img)
+        # font = ImageFont.truetype(<font-file>, <font-size>)
+        x = img.width//2
+        y = img.height//2
+        # font = ImageFont.truetype("bot/helper/ABeeZee-Regular.otf", 16*y/10)
+        # draw.text((x, y),"Sample Text",(r,g,b))
+        # Create piece of canvas to draw text on and blur
+        # blurred = Image.new('RGBA', img.size)
+        # draw = ImageDraw.Draw(blurred)
+        # draw.text(xy=(x,y), text=CUSTOM_FILENAME, fill='cyan', font=font, anchor='mm')
+        # blurred = blurred.filter(ImageFilter.BoxBlur(7))
+
+        # # Paste soft text onto background
+        # img.paste(blurred,blurred)
+
+        # # Draw on sharp text
+        # draw = ImageDraw.Draw(img)
+        # draw.text(xy=(x,y), text=CUSTOM_FILENAME, fill='navy', font=font, anchor='mm')
+        markup = Image.open(requests.get('https://5fb0e2805042ef0018e46033.iran.liara.space/photos/site/markup.png', stream=True).raw)
+        ratio = markup.height / markup.width
+        markup = markup.resize((img.width//2, int(img.width//2 * ratio)))
+        x = (img.width // 2) - (markup.width // 2)
+        y = (img.height // 2) - (markup.height // 2)
+        img.paste(markup, (x, y), mask=markup)
+        img.save(des_dir)
+        return des_dir
+    except Exception as e:
+        print(e)
+        return des_dir
+        
+
 def take_ss(video_file):
     des_dir = 'Thumbnails'
     if not ospath.exists(des_dir):
@@ -186,6 +222,7 @@ def take_ss(video_file):
     if not ospath.lexists(des_dir):
         return None
     Image.open(des_dir).convert("RGB").save(des_dir, "JPEG")
+    des_dir = add_markup(des_dir)
     return des_dir
 
 def split(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=False):

@@ -17,7 +17,7 @@ from bot.helper.telegram_helper import button_build
 
 
 def add_qb_torrent(link, path, listener, select):
-    client = get_client()
+    # client = get_client()
     pincode = ""
     try:
         if ospath.exists(link):

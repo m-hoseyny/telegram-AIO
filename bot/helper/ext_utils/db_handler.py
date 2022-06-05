@@ -180,7 +180,11 @@ class DbManger:
     def rss_add(self, name, link, last, title, filters):
         if self.err:
             return
-        self.cur.execute("INSERT INTO rss (name, link, last, title, filters) VALUES ('{}', '{}', '{}', '{}', '{}')".format(name, link, last, title, filters))
+        if not filters:
+            query = "INSERT INTO rss (name, link, last, title, filters) VALUES ('{}', '{}', '{}', '{}', null)".format(name, link, last, title)
+        else:
+            query = "INSERT INTO rss (name, link, last, title, filters) VALUES ('{}', '{}', '{}', '{}', '{}')".format(name, link, last, title, filters)
+        self.cur.execute(query)
         self.conn.commit()
         self.disconnect()
 
@@ -188,6 +192,13 @@ class DbManger:
         if self.err:
             return
         self.cur.execute("UPDATE rss SET last = '{}', title = '{}' WHERE name = '{}'".format(last, title, name))
+        self.conn.commit()
+        self.disconnect()
+
+    def rss_update_filters(self, name, filters):
+        if self.err:
+            return
+        self.cur.execute("UPDATE rss SET filters = '{}' WHERE name = '{}'".format(filters, name))
         self.conn.commit()
         self.disconnect()
 
@@ -208,3 +219,56 @@ class DbManger:
 if DB_URI is not None:
     DbManger().db_init()
 
+
+class FileHandler:
+    def __init__(self, fname, verbose=True):
+        self.fname = fname
+        self.verbose = verbose
+        open(self.fname, 'a').close()
+
+    @property
+    def list(self):
+        with open(self.fname, 'r') as f:
+            lines = [x.strip('\n') for x in f.readlines()]
+            return [x for x in lines if x]
+
+    @property
+    def set(self):
+        return set(self.list)
+
+    def __iter__(self):
+        for i in self.list:
+            yield next(iter(i))
+
+    def __len__(self):
+        return len(self.list)
+
+    def append(self, item, allow_duplicates=False):
+        if self.verbose:
+            msg = "Adding '{}' to `{}`.".format(item, self.fname)
+            # print(msg)
+
+        if not allow_duplicates and str(item) in self.list:
+            msg = "'{}' already in `{}`.".format(item, self.fname)
+            # print(msg)
+            return
+
+        with open(self.fname, 'a') as f:
+            f.write('{item}\n'.format(item=item))
+
+    def remove(self, x):
+        x = str(x)
+        items = self.list
+        if x in items:
+            items.remove(x)
+            msg = "Removing '{}' from `{}`.".format(x, self.fname)
+            # print(msg)
+            self.save_list(items)
+
+    def random(self):
+        return random.choice(self.list)
+
+    def save_list(self, items):
+        with open(self.fname, 'w') as f:
+            for item in items:
+                f.write('{item}\n'.format(item=item))
