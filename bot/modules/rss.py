@@ -13,6 +13,9 @@ from bot.helper.telegram_helper import button_build
 
 rss_dict_lock = Lock()
 BLOCKED_CATEGORIES = ['music', 'xxx', 'book', 'other']
+black_lists_file =  FileHandler('blacklists.txt')
+
+LOGGER.info('Blocking list: {}'.format(', '.join(black_lists_file.list)))
 
 send_rss_file = FileHandler('rss.db')
 
@@ -20,7 +23,7 @@ def rss_list(update, context):
     if len(rss_dict) > 0:
         list_feed = "<b>Your subscriptions: </b>\n\n"
         for title, url in list(rss_dict.items()):
-            list_feed += f"<b>Title:</b> <code>{title}</code>\n<b>Feed Url: </b><code>{url[0]}</code>\n<b>Last feed: </b><code>{url[1]}</code>\n<b>filters: </b><code>{url[3]}</code>\n\n"
+            list_feed += f"<b>Title:</b> <code>{title}</code>\n<b>Feed Url: </b><code>{url[0]}</code>\n\n"
         sendMessage(list_feed, context.bot, update.message)
     else:
         sendMessage("No subscriptions.", context.bot, update.message)
@@ -140,6 +143,21 @@ def rss_unsub(update, context):
     except IndexError:
         sendMessage(f"Use this format to remove feed url:\n/{BotCommands.RssUnSubCommand} Title", context.bot, update.message)
 
+def rss_blacklist_add(update, context):
+    try:
+        args = update.message.text.split(" ")
+        new_bl = ''
+        if len(args) > 2:
+            filters = args[1:]
+            for filter in filters:
+                black_lists_file.append(filter)
+                new_bl = '\n'.join(filters)
+        black_list_str = ', '.join(black_lists_file.list)
+        sendMessage(f"Rss blacklists:\nNew<code>{new_bl}</code>\nTotal:\n<code>{black_list_str}</code>", context.bot, update.message)
+        LOGGER.info(f"Rss blacklists added")
+    except IndexError:
+        sendMessage(f"Use this format to remove feed url:\n/{BotCommands.RssBLCommand} Title", context.bot, update.message)
+
 def rss_settings(update, context):
     buttons = button_build.ButtonMaker()
     buttons.sbutton("Unsubscribe All", "rss unsuball")
@@ -203,6 +221,11 @@ def rss_monitor(context):
                     if rss_d.entries[feed_count].get('category') and any(x in str(rss_d.entries[feed_count]['category']).lower() for x in BLOCKED_CATEGORIES):
                         parse = False
                         feed_count += 1
+                    if any(x.lower() in str(rss_d.entries[feed_count]['title']).lower() for x in black_lists_file.list):
+                        sendRss(text='Blocking [{}]'.format(rss_d.entries[feed_count]['title']), bot=context.bot)
+                        parse = False
+                        feed_count += 1
+                        continue
                     if data[1] == rss_d.entries[feed_count]['link'] or data[2] == rss_d.entries[feed_count]['title']:
                         break
                 except IndexError:
@@ -215,7 +238,7 @@ def rss_monitor(context):
                     send_rss_file.append(data[1])
                 print(data[3])
                 for list in data[3]:
-                    if not any(x in str(rss_d.entries[feed_count]['title']).lower() for x in list):
+                    if not any(x.lower() in str(rss_d.entries[feed_count]['title']).lower() for x in list):
                         parse = False
                         feed_count += 1
                         break
@@ -251,6 +274,7 @@ if DB_URI is not None and RSS_CHAT_ID is not None:
     rss_get_handler = CommandHandler(BotCommands.RssGetCommand, rss_get, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     rss_sub_handler = CommandHandler(BotCommands.RssSubCommand, rss_sub, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     rss_unsub_handler = CommandHandler(BotCommands.RssUnSubCommand, rss_unsub, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+    rss_blacklist_handler = CommandHandler(BotCommands.RssBLCommand, rss_blacklist_add, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     rss_settings_handler = CommandHandler(BotCommands.RssSettingsCommand, rss_settings, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     rss_buttons_handler = CallbackQueryHandler(rss_set_update, pattern="rss", run_async=True)
 
@@ -260,5 +284,6 @@ if DB_URI is not None and RSS_CHAT_ID is not None:
     dispatcher.add_handler(rss_unsub_handler)
     dispatcher.add_handler(rss_settings_handler)
     dispatcher.add_handler(rss_buttons_handler)
+    dispatcher.add_handler(rss_blacklist_handler)
     rss_job = job_queue.run_repeating(rss_monitor, interval=RSS_DELAY, first=20, name="RSS")
     rss_job.enabled = True
