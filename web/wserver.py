@@ -7,6 +7,23 @@ import logging
 from time import sleep
 from qbittorrentapi import NotFound404Error, Client as qbClient
 from flask import Flask, request
+from pyrogram import Client
+from os import remove as osremove, path as ospath, environ
+from dotenv import load_dotenv
+
+
+load_dotenv('config.env', override=True)
+
+
+def getConfig(name: str):
+    return environ[name]
+
+TELEGRAM_API = getConfig('TELEGRAM_API')
+TELEGRAM_HASH = getConfig('TELEGRAM_HASH')
+
+client_app = Client('pyrogram_client_client', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, phone_number='+79919810672')
+
+client_app.start()
 
 from web import nodes
 
@@ -755,6 +772,16 @@ def set_priority(hash_id):
 @app.route('/')
 def homepage():
     return "<h1>See mirror-leech-telegram-bot <a href='https://www.github.com/anasty17/mirror-leech-telegram-bot'>@GitHub</a> By <a href='https://github.com/anasty17'>Anas</a></h1>"
+
+
+@app.route('/send_msg')
+def send_mesage():
+    data = request.json
+    chat_id = data.get('peer')
+    text = data.get('text')
+    client_app.send_message(chat_id=chat_id, text=text)
+    return {'status': 'ok'}
+
 
 @app.errorhandler(NotFound404Error)
 def page_not_found(e):
