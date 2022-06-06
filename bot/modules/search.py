@@ -14,15 +14,15 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.telegram_helper import button_build
 
-if SEARCH_PLUGINS is not None:
-    PLUGINS = []
-    qbclient = get_client()
-    qb_plugins = qbclient.search_plugins()
-    if qb_plugins:
-        for plugin in qb_plugins:
-            qbclient.search_uninstall_plugin(names=plugin['name'])
-    qbclient.search_install_plugin(SEARCH_PLUGINS)
-    qbclient.auth_log_out()
+# if SEARCH_PLUGINS is not None:
+#     PLUGINS = []
+#     # qbclient = get_client()
+#     qb_plugins = qbclient.search_plugins()
+#     if qb_plugins:
+#         for plugin in qb_plugins:
+#             qbclient.search_uninstall_plugin(names=plugin['name'])
+#     qbclient.search_install_plugin(SEARCH_PLUGINS)
+#     qbclient.auth_log_out()
 
 SITES = {
     "1337x": "1337x",
@@ -118,7 +118,7 @@ def _search(key, site, message, tool):
         except Exception as e:
             return editMessage(str(e), message)
     else:
-        client = get_client()
+        # client = get_client()
         search = client.search_start(pattern=str(key), plugins=str(site), category='all')
         search_id = search.id
         while True:
@@ -233,7 +233,7 @@ def _api_buttons(user_id):
 def _plugin_buttons(user_id):
     buttons = button_build.ButtonMaker()
     if not PLUGINS:
-        qbclient = get_client()
+        # qbclient = get_client()
         pl = qbclient.search_plugins()
         for name in pl:
             PLUGINS.append(name['name'])
