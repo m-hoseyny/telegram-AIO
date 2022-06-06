@@ -19,6 +19,18 @@ AUDIO_SUFFIXES = ("MP3", "M4A", "M4B", "FLAC", "WAV", "AIF", "OGG", "AAC", "DTS"
 IMAGE_SUFFIXES = ("JPG", "JPX", "PNG", "WEBP", "CR2", "TIF", "BMP", "JXR", "PSD", "ICO", "HEIC", "JPEG")
 
 
+def change_name(fname):
+    splited_name, ext = ospath.splitext(fname)
+    splited_name = splited_name.replace(' ', '.').replace('-', '.').replace(',', '').replace('[', '.').replace(']', '.').replace('..', '.')
+    corrected = []
+    for n in splited_name.split('.')[1:]:
+        if len('.'.join(corrected) + '.' + n) > 64 - (len(ext)+1):
+            break
+        corrected.append(n)
+    
+    return '.'.join(corrected) + ext
+
+
 class TgUploader:
 
     def __init__(self, name=None, listener=None):
@@ -64,11 +76,12 @@ class TgUploader:
         self.__listener.onUploadComplete(None, size, self.__msgs_dict, None, self.__corrupted, self.name)
 
     def __upload_file(self, up_path, file_, dirpath):
-        file_ = file_.replace(',', '').replace('[', '.').replace(']', '.')
+        org_file_ = file_
         if CUSTOM_FILENAME is not None:
             cap_mono = f"{CUSTOM_FILENAME} <code>{file_}</code>"
             file_ = f"{CUSTOM_FILENAME}.{file_}"
-            file_ = file_.replace(' ', '.')
+            if len(file_) > 64:
+                file_ = change_name(file_)
             new_path = ospath.join(dirpath, file_)
             osrename(up_path, new_path)
             up_path = new_path
@@ -123,7 +136,6 @@ class TgUploader:
                                                               disable_notification=True,
                                                               progress=self.__upload_progress)
                 elif file_.upper().endswith(IMAGE_SUFFIXES):
-                    return
                     self.__sent_msg = self.__sent_msg.reply_photo(photo=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
@@ -132,13 +144,14 @@ class TgUploader:
                                                               progress=self.__upload_progress)
                 else:
                     notMedia = False
+            LOGGER.info(f'Sending as Doc [{org_file_}]')
             if self.__as_doc or notMedia or file_.upper().endswith('ZIP'):
+                LOGGER.info(f'Uploading doc [{org_file_}]')
                 if file_.upper().endswith(VIDEO_SUFFIXES) and thumb is None:
                     thumb = take_ss(up_path)
                     if self.__is_cancelled:
                         if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
                             osremove(thumb)
-                        return
                 self.__sent_msg = self.__sent_msg.reply_document(document=up_path,
                                                              quote=True,
                                                              thumb=thumb,
