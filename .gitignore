@@ -12,3 +12,9 @@ authorized_chats.txt
 log.txt
 accounts/*
 aio/*
+*.session
+*.session-journal
+*.jpeg
+*.jpg
+*.txt
+*.db
