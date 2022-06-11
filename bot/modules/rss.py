@@ -11,6 +11,9 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger, FileHandler
 from bot.helper.telegram_helper import button_build
 
+import re
+from difflib import SequenceMatcher
+
 rss_dict_lock = Lock()
 BLOCKED_CATEGORIES = ['music', 'xxx', 'book', 'other']
 black_lists_file =  FileHandler('blacklists.txt')
@@ -18,6 +21,17 @@ black_lists_file =  FileHandler('blacklists.txt')
 LOGGER.info('Blocking list: {}'.format(', '.join(black_lists_file.list)))
 
 send_rss_file = FileHandler('rss.db')
+
+
+def clean_name(name):
+    res = re.sub(r'[^\w\s]', '', name)
+    res = res.lower()
+    return res
+
+def is_euqal_titles(a, b):
+    a = clean_name(a)
+    b = clean_name(b)
+    return SequenceMatcher(None, a, b).ratio() > 0.9
 
 def rss_list(update, context):
     if len(rss_dict) > 0:
@@ -238,7 +252,7 @@ def rss_monitor(context):
                     send_rss_file.append(data[1])
                 print(data[3])
                 for list in data[3]:
-                    if not any(x.lower() in str(rss_d.entries[feed_count]['title']).lower() for x in list):
+                    if not any(clean_name(x.lower()) in clean_name(str(rss_d.entries[feed_count]['title']).lower()) for x in list):
                         parse = False
                         feed_count += 1
                         break
