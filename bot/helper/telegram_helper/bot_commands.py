@@ -55,5 +55,6 @@ class _BotCommands:
         self.HashCommand = f'hash{CMD_INDEX}'
         self.ShortenerCommand = f'short{CMD_INDEX}'
         self.MediaInfoCommand = f'mediainfo{CMD_INDEX}'
+        self.LimitHandler = f'limit{CMD_INDEX}'
 
 BotCommands = _BotCommands()

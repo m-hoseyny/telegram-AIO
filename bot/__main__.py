@@ -13,7 +13,7 @@ from telegram import ParseMode, InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 
 # from wserver import start_server_async
-from bot import HEROKU_API_KEY, HEROKU_APP_NAME, bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, PORT, alive, web, OWNER_ID, AUTHORIZED_CHATS, LOGGER, Interval, rss_session, a2c, client_app
+from bot import HEROKU_API_KEY, HEROKU_APP_NAME, bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, PORT, alive, web, OWNER_ID, AUTHORIZED_CHATS, LOGGER, Interval, rss_session, a2c, client_app, TORRENT_DIRECT_LIMIT
 from .helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.message_utils import auto_delete_message, sendMessage, sendMarkup, editMessage, sendLogFile
@@ -77,6 +77,13 @@ def ping(update, context):
 
 def log(update, context):
     sendLogFile(context.bot, update.message)
+
+def limit_changer(update, context):
+    args = update.message.text.split(" ")
+    global TORRENT_DIRECT_LIMIT
+    TORRENT_DIRECT_LIMIT = float(args[1])
+    reply = sendMessage(f"Limit changed to {TORRENT_DIRECT_LIMIT}GB", context.bot, update.message)
+
 
 
 help_string_telegraph = f'''<br>
@@ -154,6 +161,8 @@ help = telegraph.create_page(
 
 help_string = f'''
 /{BotCommands.PingCommand}: Check how long it takes to Ping the Bot
+
+/{BotCommands.LimitHandler}: Change Limit /limit 2
 
 /{BotCommands.AuthorizeCommand}: Authorize a chat or a user to use the bot (Can only be invoked by Owner & Sudo of the bot)
 
@@ -245,11 +254,13 @@ def main():
     help_handler = CommandHandler(BotCommands.HelpCommand,
                                   bot_help, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
     log_handler = CommandHandler(BotCommands.LogCommand, log, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+    limit_handler = CommandHandler(BotCommands.LimitHandler, limit_changer, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(ping_handler)
     dispatcher.add_handler(restart_handler)
     dispatcher.add_handler(help_handler)
     dispatcher.add_handler(log_handler)
+    dispatcher.add_handler(limit_handler)
     updater.start_polling(drop_pending_updates=IGNORE_PENDING_REQUESTS)
     LOGGER.info("Bot Started!")
     signal.signal(signal.SIGINT, exit_clean_up)
