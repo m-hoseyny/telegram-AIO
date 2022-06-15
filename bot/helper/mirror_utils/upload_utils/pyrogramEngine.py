@@ -38,6 +38,7 @@ class TgUploader:
         self.uploaded_bytes = 0
         self._last_uploaded = 0
         self.__listener = listener
+        self.uid = listener.uid
         self.__start_time = time()
         self.__is_cancelled = False
         self.__as_doc = AS_DOCUMENT

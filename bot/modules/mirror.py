@@ -38,6 +38,9 @@ from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, de
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
 
+upload_lists = []
+active_uploads = []
+
 class MirrorListener:
     def __init__(self, bot, message, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None, tag=None):
         self.bot = bot
@@ -157,7 +160,15 @@ class MirrorListener:
             with download_dict_lock:
                 download_dict[self.uid] = tg_upload_status
             update_all_messages()
-            tg.upload()
+
+            if not upload_lists and not active_uploads:
+                LOGGER.info("There is no active uploading")
+                active_uploads.append(self.uid)
+                tg.upload()
+            else:
+                LOGGER.info("There is {} active uploading... waiting...".format(len(upload_lists)))
+                upload_lists.append(tg)
+            
         else:
             size = get_path_size(up_path)
             LOGGER.info(f"Upload Name: {up_name}")
@@ -187,6 +198,19 @@ class MirrorListener:
 
     def onUploadComplete(self, link: str, size, files, folders, typ, name: str):
         msg = f'<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}'
+
+        if active_uploads:
+            LOGGER.info('Upload {} successfullt...'.format(self.uid))
+            active_uploads.remove(self.uid)
+        else:
+            return
+
+        if upload_lists and not active_uploads:
+            tg = upload_lists.pop()
+            active_uploads.append(tg.uid)
+            LOGGER.info('begin to another upload'.format(self.uid))
+            Thread(target=tg.upload).start()
+        
         if self.isLeech:
             count = len(files)
             msg += f'\n<b>Total Files: </b>{count}'
