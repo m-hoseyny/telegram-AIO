@@ -44,6 +44,12 @@ class DbManger:
               )
               """
         self.cur.execute(sql)
+        sql = """CREATE TABLE IF NOT EXISTS settings (
+                 name text,
+                 value text
+              )
+              """
+        self.cur.execute(sql)
         self.conn.commit()
         LOGGER.info("Database Initiated")
         self.db_load()
@@ -215,6 +221,28 @@ class DbManger:
         self.cur.execute("TRUNCATE TABLE rss")
         self.conn.commit()
         self.disconnect()
+
+    def setting_add(self, name, value):
+        if self.err:
+            return
+        query = "INSERT INTO settings (name, value) VALUES ('{}', '{}')".format(name, value)
+        self.cur.execute(query)
+        self.conn.commit()
+        self.disconnect()
+
+    def setting_update(self, name, value):
+        if self.err:
+            return
+        self.cur.execute("UPDATE settings SET value = '{}' WHERE name = '{}'".format(value, name))
+        self.conn.commit()
+        self.disconnect()
+
+    def get_setting(self, name):
+        if self.err:
+            return
+        self.cur.execute("SELECT * FROM settings WHERE name = '{}'".format(name))
+        res = self.cur.fetchone()
+        return res
 
 if DB_URI is not None:
     DbManger().db_init()

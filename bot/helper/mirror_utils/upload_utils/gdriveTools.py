@@ -22,7 +22,7 @@ from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot import parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, USE_SERVICE_ACCOUNTS, BUTTON_FOUR_NAME, \
                 BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, BUTTON_SIX_NAME, BUTTON_SIX_URL, VIEW_LINK, \
                 DRIVES_NAMES, DRIVES_IDS, INDEX_URLS
-from bot.helper.ext_utils.telegraph_helper import telegraph
+# from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, setInterval
 from bot.helper.ext_utils.fs_utils import get_mime_type, get_path_size
 from bot.helper.ext_utils.shortenurl import short_url
@@ -534,11 +534,11 @@ class GoogleDriveHelper:
                 if nxt_page < self.num_of_path:
                     content += f'<b> | <a href="https://telegra.ph/{self.path[nxt_page]}">Next</a></b>'
                     nxt_page += 1
-            telegraph.edit_page(
-                path = self.path[prev_page],
-                title = 'Mirror-Leech-Bot Drive Search',
-                content=content
-            )
+            # telegraph.edit_page(
+            #     path = self.path[prev_page],
+            #     title = 'Mirror-Leech-Bot Drive Search',
+            #     content=content
+            # )
         return
 
     def __escapes(self, str):
@@ -720,13 +720,13 @@ class GoogleDriveHelper:
         if len(self.telegraph_content) == 0:
             return "", None
 
-        for content in self.telegraph_content:
-            self.path.append(
-                telegraph.create_page(
-                    title='Mirror-Leech-Bot Drive Search',
-                    content=content
-                )["path"]
-            )
+        # for content in self.telegraph_content:
+        #     self.path.append(
+        #         telegraph.create_page(
+        #             title='Mirror-Leech-Bot Drive Search',
+        #             content=content
+        #         )["path"]
+        #     )
         time.sleep(0.5)
         self.num_of_path = len(self.path)
         if self.num_of_path > 1:

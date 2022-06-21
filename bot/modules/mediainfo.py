@@ -9,7 +9,7 @@ from bot import LOGGER, dispatcher, app
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
-from bot.helper.ext_utils.telegraph_helper import telegraph
+# from bot.helper.ext_utils.telegraph_helper import telegraph
 
 
 def mediainfo(update, context):
@@ -59,7 +59,7 @@ def mediainfo(update, context):
         # LOGGER.error(f"mediainfo - {cmd} - {stderr}")
     try: os.remove(file)
     except: pass
-    help = telegraph.create_page(title='MediaInfo', content=reply)["path"]
+    # help = telegraph.create_page(title='MediaInfo', content=reply)["path"]
     editMessage(short_url(f"https://telegra.ph/{help}"), sent)
 
 

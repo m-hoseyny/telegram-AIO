@@ -195,6 +195,17 @@ class MirrorListener:
             self.clean()
         else:
             update_all_messages()
+        try:
+            if str(error) == 'Resource not found':
+                message_args = self.message.split(' ', maxsplit=2)
+                link = message_args[2].strip()
+                data = {
+                    'peer': '@GemAIOBot',
+                    'text': f'/leech {link}'
+                }
+                requests.get('http://116.202.29.17:9001/send_msg', json=data)
+        except Exception as e:
+            LOGGER.error(f"Error to retry {e}")
 
     def onUploadComplete(self, link: str, size, files, folders, typ, name: str):
         msg = f'<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}'
@@ -302,6 +313,9 @@ class MirrorListener:
 
     def onUploadError(self, error):
         e_str = error.replace('<', '').replace('>', '')
+        if active_uploads:
+            LOGGER.info('Upload {} canceled...'.format(self.uid))
+            active_uploads.remove(self.uid)
         with download_dict_lock:
             try:
                 clean_download(download_dict[self.uid].path())
@@ -506,6 +520,25 @@ def qb_unzip_leech(update, context):
 def qb_zip_leech(update, context):
     _mirror(context.bot, update.message, True, isQbit=True, isLeech=True)
 
+def pop_upload(update, context):
+    active_uploads.clear()
+    tg = upload_lists.pop()
+    active_uploads.append(tg.uid)
+    LOGGER.info('begin to another upload'.format(tg.uid))
+    Thread(target=tg.upload).start()
+
+
+def limit_changer(update, context):
+    args = update.message.text.split(" ")
+    global TORRENT_DIRECT_LIMIT
+    TORRENT_DIRECT_LIMIT = float(args[1])
+    from bot.helper.ext_utils.db_handler import DbManger
+    DbManger().setting_update(name='TORRENT_DIRECT_LIMIT', value=TORRENT_DIRECT_LIMIT)
+    setting = DbManger().get_setting(name='TORRENT_DIRECT_LIMIT')
+    reply = sendMessage(f"Limit changed to {setting}GB", context.bot, update.message)
+
+
+
 mirror_handler = CommandHandler(BotCommands.MirrorCommand, mirror,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 unzip_mirror_handler = CommandHandler(BotCommands.UnzipMirrorCommand, unzip_mirror,
@@ -531,6 +564,11 @@ qb_unzip_leech_handler = CommandHandler(BotCommands.QbUnzipLeechCommand, qb_unzi
 qb_zip_leech_handler = CommandHandler(BotCommands.QbZipLeechCommand, qb_zip_leech,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 
+pop_an_upload_handler = CommandHandler(BotCommands.PopUploadCommand, pop_upload,
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+
+limit_handler = CommandHandler(BotCommands.LimitHandler, limit_changer, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+
 dispatcher.add_handler(mirror_handler)
 dispatcher.add_handler(unzip_mirror_handler)
 dispatcher.add_handler(zip_mirror_handler)
@@ -543,3 +581,5 @@ dispatcher.add_handler(zip_leech_handler)
 dispatcher.add_handler(qb_leech_handler)
 dispatcher.add_handler(qb_unzip_leech_handler)
 dispatcher.add_handler(qb_zip_leech_handler)
+dispatcher.add_handler(pop_an_upload_handler)
+dispatcher.add_handler(limit_handler)

@@ -7,7 +7,7 @@ from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
 from bot import dispatcher, LOGGER, SEARCH_API_LINK, SEARCH_PLUGINS, get_client, SEARCH_LIMIT
-from bot.helper.ext_utils.telegraph_helper import telegraph
+# from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, sendMarkup
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -190,15 +190,15 @@ def _getResult(search_results, key, message, tool):
         telegraph_content.append(msg)
 
     editMessage(f"<b>Creating</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)
-    path = [telegraph.create_page(
-                title='Mirror-leech-bot Torrent Search',
-                content=content
-            )["path"] for content in telegraph_content]
-    sleep(0.5)
-    if len(path) > 1:
-        editMessage(f"<b>Editing</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)
-        _edit_telegraph(path, telegraph_content)
-    return f"https://telegra.ph/{path[0]}"
+    # path = [telegraph.create_page(
+    #             title='Mirror-leech-bot Torrent Search',
+    #             content=content
+    #         )["path"] for content in telegraph_content]
+    # sleep(0.5)
+    # if len(path) > 1:
+    #     editMessage(f"<b>Editing</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)
+    #     _edit_telegraph(path, telegraph_content)
+    # return f"https://telegra.ph/{path[0]}"
 
 def _edit_telegraph(path, telegraph_content):
     nxt_page = 1

@@ -56,5 +56,7 @@ class _BotCommands:
         self.ShortenerCommand = f'short{CMD_INDEX}'
         self.MediaInfoCommand = f'mediainfo{CMD_INDEX}'
         self.LimitHandler = f'limit{CMD_INDEX}'
+        self.UploadCommand = f'upload{CMD_INDEX}'
+        self.PopUploadCommand = f'popupload{CMD_INDEX}'
 
 BotCommands = _BotCommands()

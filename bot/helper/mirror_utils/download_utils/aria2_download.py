@@ -12,6 +12,7 @@ from bot.helper.ext_utils.fs_utils import get_base_name, check_storage_threshold
 @new_thread
 def __onDownloadStarted(api, gid):
     try:
+        global TORRENT_DIRECT_LIMIT
         if any([STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, STORAGE_THRESHOLD]):
             sleep(1.5)
             dl = getDownloadByGid(gid)
@@ -44,6 +45,11 @@ def __onDownloadStarted(api, gid):
                         return sendMarkup("Here are the search results:", dl.getListener().bot, dl.getListener().message, button)
             if any([ZIP_UNZIP_LIMIT, TORRENT_DIRECT_LIMIT, STORAGE_THRESHOLD]):
                 sleep(1)
+                from bot.helper.ext_utils.db_handler import DbManger
+                if DbManger().get_setting(name='TORRENT_DIRECT_LIMIT'):
+                    value = DbManger().get_setting(name='TORRENT_DIRECT_LIMIT')
+                    TORRENT_DIRECT_LIMIT = float(value[1])
+                LOGGER.info(f'TORRENT_DIRECT_LIMIT is {TORRENT_DIRECT_LIMIT}GB')
                 limit = None
                 size = api.get_download(gid).total_length
                 arch = any([dl.getListener().isZip, dl.getListener().extract])

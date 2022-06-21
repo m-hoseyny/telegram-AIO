@@ -276,7 +276,15 @@ try:
     if len(TORRENT_DIRECT_LIMIT) == 0:
         raise KeyError
     else:
+        from bot.helper.ext_utils.db_handler import DbManger
         TORRENT_DIRECT_LIMIT = float(TORRENT_DIRECT_LIMIT)
+        try:
+            if DbManger().get_setting('TORRENT_DIRECT_LIMIT'):
+                DbManger().setting_update(name='TORRENT_DIRECT_LIMIT', value=TORRENT_DIRECT_LIMIT)
+            else:
+                DbManger().setting_add(name='TORRENT_DIRECT_LIMIT', value=TORRENT_DIRECT_LIMIT)
+        except Exception as e:
+            LOGGER.error(f"Adding seting TORRENT_DIRECT_LIMIT [{e}]")
 except KeyError:
     TORRENT_DIRECT_LIMIT = None
 try:
