@@ -4,9 +4,11 @@ from telegram.message import Message
 from telegram.error import RetryAfter
 from pyrogram.errors import FloodWait
 
+
 from bot import AUTO_DELETE_MESSAGE_DURATION, LOGGER, status_reply_dict, status_reply_dict_lock, \
                 Interval, DOWNLOAD_STATUS_UPDATE_INTERVAL, RSS_CHAT_ID, rss_session, bot, app
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
+from bot.helper.telegram_helper.button_build import ButtonMaker
 
 
 def sendMessage(text: str, bot, message: Message):
@@ -22,11 +24,15 @@ def sendMessage(text: str, bot, message: Message):
         LOGGER.error(str(e))
         return
 
-def forwardMessage(peer, from_chat_id, message_id):
+def forwardMessage(peer, from_chat_id, message_id, file_name):
     try:
+        # buttons = ButtonMaker()
+        # buttons.buildbutton("DirectLink", f"http://dl2.pkdirectdl.xyz/{message_id}/{file_name}")
+        # reply_markup = InlineKeyboardMarkup(buttons.build_menu(1))
         return app.copy_message(chat_id=peer,
                             from_chat_id=from_chat_id,
                             message_id=message_id
+                            # reply_markup=reply_markup
                             )
     except Exception as e:
         LOGGER.error(str(e))
@@ -34,7 +40,9 @@ def forwardMessage(peer, from_chat_id, message_id):
 
 def sendMarkup(text: str, bot, message: Message, reply_markup: InlineKeyboardMarkup):
     try:
+
         LOGGER.info("Sending MEssage")
+
         return bot.send_message(message.chat_id,
                             reply_to_message_id=message.message_id,
                             text=text, reply_markup=reply_markup, allow_sending_without_reply=True,

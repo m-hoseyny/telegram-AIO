@@ -239,8 +239,8 @@ def split(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=Fals
                             path, "-ss", str(start_time), "-fs", str(split_size),
                             "-async", "1", "-strict", "-2", "-c", "copy", out_path])
             out_size = get_path_size(out_path)
-            if out_size > 2097152000:
-                dif = out_size - 2097152000
+            if out_size > TG_SPLIT_SIZE:
+                dif = out_size - TG_SPLIT_SIZE
                 split_size = split_size - dif + 2500000
                 osremove(out_path)
                 return split(path, size, file_, dirpath, split_size, start_time, i, inLoop=True)

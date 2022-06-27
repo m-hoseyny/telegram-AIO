@@ -1,5 +1,6 @@
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 from bot import DOWNLOAD_DIR
+from time import time
 
 
 class GdDownloadStatus:
@@ -9,6 +10,7 @@ class GdDownloadStatus:
         self.__uid = listener.uid
         self.message = listener.message
         self.__gid = gid
+        self.start_time = time()
 
     def path(self):
         return f"{DOWNLOAD_DIR}{self.__uid}"

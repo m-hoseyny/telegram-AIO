@@ -1,5 +1,6 @@
 from bot import aria2, DOWNLOAD_DIR, LOGGER
 from bot.helper.ext_utils.bot_utils import MirrorStatus
+from time import time
 
 def get_download(gid):
     try:
@@ -16,6 +17,7 @@ class AriaDownloadStatus:
         self.__uid = listener.uid
         self.__listener = listener
         self.message = listener.message
+        self.start_time = time()
 
     def __update(self):
         self.__download = get_download(self.__gid)

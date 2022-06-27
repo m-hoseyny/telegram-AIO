@@ -7,7 +7,7 @@ from pyrogram.enums import ParseMode
 from PIL import Image
 from threading import RLock
 
-from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME
+from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME, client_app
 from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_video_resolution, get_path_size
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 
@@ -112,18 +112,47 @@ class TgUploader:
                         new_path = ospath.join(dirpath, file_)
                         osrename(up_path, new_path)
                         up_path = new_path
-                    print(up_path)
-                    self.__sent_msg = self.__sent_msg.reply_video(video=up_path,
-                                                                quote=True,
-                                                                caption=cap_mono,
-                                                                parse_mode=ParseMode.HTML,
-                                                                duration=duration,
-                                                                width=width,
-                                                                height=height,
-                                                                thumb=thumb,
-                                                                supports_streaming=True,
-                                                                disable_notification=True,
-                                                                progress=self.__upload_progress)
+                    fsize = ospath.getsize(up_path)
+                    if fsize >= 2000 * 1024 * 1024:
+                        older_msg = self.__sent_msg
+                        self.__sent_msg = client_app.send_video(
+                            chat_id=-1001674924703,
+                            video=up_path,
+                            # quote=True,
+                            caption=cap_mono,
+                            parse_mode=ParseMode.HTML,
+                            duration=duration,
+                            width=width,
+                            height=height,
+                            thumb=thumb,
+                            supports_streaming=True,
+                            disable_notification=True,
+                            progress=self.__upload_progress
+                        )
+                        self.__listener.bot.send_message(chat_id=older_msg.chat.id,
+                            reply_to_message_id=older_msg.id,
+                            text='File sent to the channel\n\n<a href="https://t.me/c/1674924703/{}">link</a>'.format(self.__sent_msg.id),
+                            allow_sending_without_reply=True,
+                            parse_mode='HTMl', disable_web_page_preview=True
+                            # reply_markup=reply_markup
+                            )
+                    else:
+                        self.__sent_msg = self.__sent_msg.reply_video(video=up_path,
+                                                                    quote=True,
+                                                                    caption=cap_mono,
+                                                                    parse_mode=ParseMode.HTML,
+                                                                    duration=duration,
+                                                                    width=width,
+                                                                    height=height,
+                                                                    thumb=thumb,
+                                                                    supports_streaming=True,
+                                                                    disable_notification=True,
+                                                                    progress=self.__upload_progress)
+                        self.__listener.bot.copy_message(chat_id=-1001674924703,
+                            from_chat_id=self.__sent_msg.chat.id,
+                            message_id=self.__sent_msg.id
+                            # reply_markup=reply_markup
+                            )
                 elif file_.upper().endswith(AUDIO_SUFFIXES):
                     duration , artist, title = get_media_info(up_path)
                     self.__sent_msg = self.__sent_msg.reply_audio(audio=up_path,

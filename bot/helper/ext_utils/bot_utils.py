@@ -141,6 +141,10 @@ def get_readable_message():
                     msg += f"\n<b>Uploaded:</b> {get_readable_file_size(download.processed_bytes())} / {download.size()}"
                 else:
                     msg += f"\n<b>Downloaded:</b> {get_readable_file_size(download.processed_bytes())} / {download.size()}"
+                    try:
+                        msg += f"\n<b>PassedTime:</b> {time() - download.start_time} s"
+                    except Exception as e:
+                        print(e)
                 msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
                 try:
                     msg += f"\n<b>Seeders:</b> {download.aria_download().num_seeders}" \
@@ -186,7 +190,7 @@ def get_readable_message():
         dlspeed = get_readable_file_size(dlspeed_bytes)
         ulspeed = get_readable_file_size(uldl_bytes)
         bmsg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {currentTime}"
-        bmsg += f"\n<b>DL:</b> {dlspeed}/s | <b>UL:</b> {ulspeed}/s"
+        # bmsg += f"\n<b>DL:</b> {dlspeed}/s | <b>UL:</b> {ulspeed}/s"
         if STATUS_LIMIT is not None and tasks > STATUS_LIMIT:
             msg += f"<b>Page:</b> {PAGE_NO}/{pages} | <b>Tasks:</b> {tasks}\n"
             buttons = ButtonMaker()
@@ -194,7 +198,7 @@ def get_readable_message():
             buttons.sbutton("▶️", "status nex")
             button = InlineKeyboardMarkup(buttons.build_menu(2))
             return msg + bmsg, button
-        
+        bmsg += f"\n@PapkornBot\n@Gemovie_support"
         return msg + bmsg, ""
 
 def turn(data):

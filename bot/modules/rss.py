@@ -236,7 +236,7 @@ def rss_monitor(context):
                         parse = False
                         feed_count += 1
                     if any(x.lower() in str(rss_d.entries[feed_count]['title']).lower() for x in black_lists_file.list):
-                        sendRss(text='Blocking [{}]'.format(rss_d.entries[feed_count]['title']), bot=context.bot)
+                        # sendRss(text='Blocking [{}]'.format(rss_d.entries[feed_count]['title']), bot=context.bot)
                         parse = False
                         feed_count += 1
                         continue
@@ -245,7 +245,7 @@ def rss_monitor(context):
                 except IndexError:
                     LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {name}. \
                           Maybe you need to add less RSS_DELAY to not miss some torrents")
-                    break
+                    continue
                 if data[1] in send_rss_file.set:
                     break
                 else:

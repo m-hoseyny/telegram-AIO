@@ -14,7 +14,7 @@ from telegram import InlineKeyboardMarkup
 
 from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, \
                 BUTTON_SIX_NAME, BUTTON_SIX_URL, BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, QB_SEED, \
-                dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER
+                dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER, client_app
 from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_gdtot_link, is_mega_link, is_gdrive_link, get_content_type, get_mega_link_type
 from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split as fssplit, clean_download
 from bot.helper.ext_utils.shortenurl import short_url
@@ -52,6 +52,7 @@ class MirrorListener:
         self.isLeech = isLeech
         self.pswd = pswd
         self.tag = tag
+        self.start_time = time()
 
     def clean(self):
         try:
@@ -231,7 +232,8 @@ class MirrorListener:
             for index, item in enumerate(list(files), start=1):
                 msg_id = files[item]
                 chat_id = str(self.message.chat.id)
-                forwardMessage(peer=-1001674924703, from_chat_id=chat_id, message_id=msg_id)
+                # if chat_id != 1764122745: 
+                #     forwardMessage(peer=-1001674924703, from_chat_id=chat_id, message_id=msg_id, file_name=name)
                 sleep(0.5)
             if self.message.chat.type == 'private':
                 pass

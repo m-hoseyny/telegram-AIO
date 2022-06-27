@@ -158,7 +158,6 @@ except KeyError as e:
 LOGGER.info("Generating BOT_STRING_SESSION")
 app = Client('pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, no_updates=True)
 client_app = Client('pyrogram_client', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, phone_number='+79919810672')
-
 try:
     USER_STRING_SESSION = getConfig('USER_STRING_SESSION')
     if len(USER_STRING_SESSION) == 0:
@@ -200,12 +199,13 @@ except KeyError:
     DB_URI = None
 try:
     TG_SPLIT_SIZE = getConfig('TG_SPLIT_SIZE')
-    if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > 2097151000:
+    # 2097151000
+    if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > 4000 * 1024 * 1024:
         raise KeyError
     else:
         TG_SPLIT_SIZE = int(TG_SPLIT_SIZE)
 except KeyError:
-    TG_SPLIT_SIZE = 2097151000
+    TG_SPLIT_SIZE = 4000 * 1024 * 1024
 try:
     STATUS_LIMIT = getConfig('STATUS_LIMIT')
     if len(STATUS_LIMIT) == 0:

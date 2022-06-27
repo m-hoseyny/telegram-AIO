@@ -260,6 +260,10 @@ def main():
         rss_session.start()
 
 app.start()
+
 client_app.start()
+# print(client_app.me)
+# app.me = client_app.me
+# print(app.me)
 main()
 idle()

@@ -94,9 +94,9 @@ class DbManger:
         if self.err:
             return "Error in DB connection, check log for details"
         elif not self.user_check(chat_id):
-            sql = 'INSERT INTO users (uid, auth) VALUES ({}, TRUE)'.format(chat_id)
+            sql = 'INSERT INTO users (uid, auth) VALUES ({}, 1)'.format(chat_id)
         else:
-            sql = 'UPDATE users SET auth = TRUE WHERE uid = {}'.format(chat_id)
+            sql = 'UPDATE users SET auth is true WHERE uid = {}'.format(chat_id)
         self.cur.execute(sql)
         self.conn.commit()
         self.disconnect()
