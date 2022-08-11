@@ -1,7 +1,7 @@
 from time import sleep
 from threading import Thread
 
-from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, LOGGER, STORAGE_THRESHOLD
+from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, LOGGER, STORAGE_THRESHOLD, threshold_limit_links
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thread, get_readable_file_size
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
@@ -60,6 +60,7 @@ def __onDownloadStarted(api, gid):
                         msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
                         msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
                         dl.getListener().onDownloadError(msg)
+                        
                         return api.remove([download], force=True, files=True)
                 if ZIP_UNZIP_LIMIT is not None and arch:
                     mssg = f'Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB'

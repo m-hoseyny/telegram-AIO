@@ -274,6 +274,7 @@ class GoogleDriveHelper:
                 return
             elif self.is_errored:
                 return
+        LOGGER.info("Going to call on Upload Complete")
         self.__listener.onUploadComplete(link, size, self.__total_files, self.__total_folders, mime_type, self.name)
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),

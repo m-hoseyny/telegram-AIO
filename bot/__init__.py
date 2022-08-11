@@ -13,6 +13,60 @@ from time import sleep, time
 from threading import Thread, Lock
 from pyrogram import Client
 from dotenv import load_dotenv
+import random
+
+class FileHandler:
+    def __init__(self, fname, verbose=True):
+        self.fname = fname
+        self.verbose = verbose
+        open(self.fname, 'a').close()
+
+    @property
+    def list(self):
+        with open(self.fname, 'r') as f:
+            lines = [x.strip('\n') for x in f.readlines()]
+            return [x for x in lines if x]
+
+    @property
+    def set(self):
+        return set(self.list)
+
+    def __iter__(self):
+        for i in self.list:
+            yield next(iter(i))
+
+    def __len__(self):
+        return len(self.list)
+
+    def append(self, item, allow_duplicates=False):
+        if self.verbose:
+            msg = "Adding '{}' to `{}`.".format(item, self.fname)
+            # print(msg)
+
+        if not allow_duplicates and str(item) in self.list:
+            msg = "'{}' already in `{}`.".format(item, self.fname)
+            # print(msg)
+            return
+
+        with open(self.fname, 'a') as f:
+            f.write('{item}\n'.format(item=item))
+
+    def remove(self, x):
+        x = str(x)
+        items = self.list
+        if x in items:
+            items.remove(x)
+            msg = "Removing '{}' from `{}`.".format(x, self.fname)
+            # print(msg)
+            self.save_list(items)
+
+    def random(self):
+        return random.choice(self.list)
+
+    def save_list(self, items):
+        with open(self.fname, 'w') as f:
+            for item in items:
+                f.write('{item}\n'.format(item=item))
 
 faulthandler.enable()
 
@@ -157,7 +211,7 @@ except KeyError as e:
 
 LOGGER.info("Generating BOT_STRING_SESSION")
 app = Client('pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, no_updates=True)
-client_app = Client('pyrogram_client', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, phone_number='+79919810672')
+client_app = Client('pyrogram_client', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, phone_number='+6282155017625')
 try:
     USER_STRING_SESSION = getConfig('USER_STRING_SESSION')
     if len(USER_STRING_SESSION) == 0:
@@ -607,3 +661,5 @@ updater = tgUpdater(token=BOT_TOKEN, request_kwargs={'read_timeout': 20, 'connec
 bot = updater.bot
 dispatcher = updater.dispatcher
 job_queue = updater.job_queue
+
+threshold_limit_links = FileHandler('threshold_limi_links')

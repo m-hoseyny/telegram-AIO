@@ -178,7 +178,16 @@ class MirrorListener:
             with download_dict_lock:
                 download_dict[self.uid] = upload_status
             update_all_messages()
-            drive.upload(up_name)
+            if not upload_lists and not active_uploads:
+                LOGGER.info("There is no active uploading")
+                active_uploads.append(self.uid)
+                drive.upload(up_name)
+            else:
+                LOGGER.info("There is {} active uploading... waiting...".format(len(upload_lists)))
+                upload_lists.append(tg)
+
+            
+            
 
     def onDownloadError(self, error):
         error = error.replace('<', ' ').replace('>', ' ')
@@ -210,11 +219,12 @@ class MirrorListener:
 
     def onUploadComplete(self, link: str, size, files, folders, typ, name: str):
         msg = f'<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}'
-
+        LOGGER.info(f'on Upload Complete Called, [({size}){link}], [{name}]')
         if active_uploads:
             LOGGER.info('Upload {} successfullt...'.format(self.uid))
             active_uploads.remove(self.uid)
         else:
+            LOGGER.info('No active uploading...')
             return
 
         if upload_lists and not active_uploads:
@@ -236,8 +246,8 @@ class MirrorListener:
                 #     forwardMessage(peer=-1001674924703, from_chat_id=chat_id, message_id=msg_id, file_name=name)
                 sleep(0.5)
             if self.message.chat.type == 'private':
-                pass
-                # sendMessage(msg, self.bot, self.message)
+                # pass
+                sendMessage(msg, self.bot, self.message)
             else:
                 chat_id = str(self.message.chat.id)[4:]
                 fmsg = ''
@@ -321,7 +331,8 @@ class MirrorListener:
         with download_dict_lock:
             try:
                 clean_download(download_dict[self.uid].path())
-            except FileNotFoundError:
+            except Exception as e:
+                LOGGER.error('error on upload {} canceled...'.format(e))
                 pass
             del download_dict[self.uid]
             count = len(download_dict)
@@ -463,6 +474,7 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
     listener = MirrorListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag)
 
     if is_gdrive_link(link):
+        LOGGER.info('Google Drive link')
         if not isZip and not extract and not isLeech:
             gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
             gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
@@ -523,11 +535,15 @@ def qb_zip_leech(update, context):
     _mirror(context.bot, update.message, True, isQbit=True, isLeech=True)
 
 def pop_upload(update, context):
-    active_uploads.clear()
-    tg = upload_lists.pop()
-    active_uploads.append(tg.uid)
-    LOGGER.info('begin to another upload'.format(tg.uid))
-    Thread(target=tg.upload).start()
+    try:
+        active_uploads.clear()
+        tg = upload_lists.pop()
+        active_uploads.append(tg.uid)
+        LOGGER.info('begin to another upload'.format(tg.uid))
+        Thread(target=tg.upload).start()
+    except Exception as e:
+        LOGGER.error('Pop Upload {}'.format(e))
+        pass
 
 
 def limit_changer(update, context):

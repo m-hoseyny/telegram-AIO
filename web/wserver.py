@@ -21,7 +21,7 @@ def getConfig(name: str):
 TELEGRAM_API = getConfig('TELEGRAM_API')
 TELEGRAM_HASH = getConfig('TELEGRAM_HASH')
 
-client_app = Client('pyrogram_client_client', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, phone_number='+79919810672')
+client_app = Client('pyrogram_client_client', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, phone_number='+6282155017625')
 
 client_app.start()
 
