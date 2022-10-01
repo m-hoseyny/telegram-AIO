@@ -18,9 +18,8 @@ rss_dict_lock = Lock()
 BLOCKED_CATEGORIES = ['music', 'xxx', 'book', 'other']
 black_lists_file =  FileHandler('blacklists.txt')
 
-LOGGER.info('Blocking list: {}'.format(', '.join(black_lists_file.list)))
-
 send_rss_file = FileHandler('rss.db')
+send_rss_file_name = FileHandler('rss_name.db')
 
 
 def clean_name(name):
@@ -226,33 +225,46 @@ def rss_monitor(context):
                 continue
             last_link = rss_d.entries[0]['link']
             last_title = rss_d.entries[0]['title']
-            if data[1] == last_link or data[2] == last_title:
-                continue
+            # if data[1] == last_link or data[2] == last_title:
+            #     continue
+            # LOGGER.info('Data is : {}'.format(data))
             feed_count = 0
             while True:
                 parse = True
+                if len(rss_d.entries) == feed_count:
+                    break
                 try:
+                    # LOGGER.info("Going to check blackList Category")
                     if rss_d.entries[feed_count].get('category') and any(x in str(rss_d.entries[feed_count]['category']).lower() for x in BLOCKED_CATEGORIES):
                         parse = False
                         feed_count += 1
+                        # LOGGER.warning("This category is blacklist")
+                        continue
+                    # LOGGER.info("Going to check blackList Names")
                     if any(x.lower() in str(rss_d.entries[feed_count]['title']).lower() for x in black_lists_file.list):
                         # sendRss(text='Blocking [{}]'.format(rss_d.entries[feed_count]['title']), bot=context.bot)
+                        LOGGER.warning('Blocking [{}]'.format(rss_d.entries[feed_count]['title']))
                         parse = False
                         feed_count += 1
                         continue
-                    if data[1] == rss_d.entries[feed_count]['link'] or data[2] == rss_d.entries[feed_count]['title']:
-                        break
-                except IndexError:
-                    LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {name}. \
-                          Maybe you need to add less RSS_DELAY to not miss some torrents")
-                    continue
-                if data[1] in send_rss_file.set:
+                    
+                    # if data[1] == rss_d.entries[0]['link'] or data[2] == rss_d.entries[0]['title']:
+                    #     break
+                except IndexError as e:
+                    LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {name}. Maybe you need to add less RSS_DELAY to not miss some torrents: [{e}]")
                     break
+
+                # LOGGER.info("Going to check send it before or not")
+                if data[1] in send_rss_file.set or data[0] in send_rss_file_name.set:
+                    # LOGGER.warning('Added before [{}]'.format(rss_d.entries[feed_count]['title']))
+                    feed_count += 1
+                    continue
                 else:
+                    send_rss_file_name.append(data[0])
                     send_rss_file.append(data[1])
-                print(data[3])
-                for list in data[3]:
-                    if not any(clean_name(x.lower()) in clean_name(str(rss_d.entries[feed_count]['title']).lower()) for x in list):
+                # LOGGER.info("Going to check filters")
+                for link_list in data[3]:
+                    if not any(clean_name(x.lower()) in clean_name(str(rss_d.entries[feed_count]['title']).lower()) for x in link_list):
                         parse = False
                         feed_count += 1
                         break
@@ -277,8 +289,8 @@ def rss_monitor(context):
             DbManger().rss_update(name, str(last_link), str(last_title))
             with rss_dict_lock:
                 rss_dict[name] = [data[0], str(last_link), str(last_title), data[3]]
-            LOGGER.info(f"Feed Name: {name}")
-            LOGGER.info(f"Last item: {last_link}")
+            # LOGGER.info(f"Feed Name: {name}")
+            # LOGGER.info(f"Last item: {last_link}")
         except Exception as e:
             LOGGER.error(f"{e} Feed Name: {name} - Feed Link: {data[0]}")
             continue
