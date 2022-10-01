@@ -207,7 +207,7 @@ class MirrorListener:
             update_all_messages()
         try:
             if str(error) == 'Resource not found':
-                message_args = self.message.split(' ', maxsplit=2)
+                message_args = self.message.text.split(' ', maxsplit=2)
                 link = message_args[2].strip()
                 data = {
                     'peer': '@GemAIOBot',
