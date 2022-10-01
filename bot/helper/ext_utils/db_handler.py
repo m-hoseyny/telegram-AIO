@@ -252,6 +252,7 @@ class FileHandler:
     def __init__(self, fname, verbose=True):
         self.fname = fname
         self.verbose = verbose
+        self.threshold = 2000
         open(self.fname, 'a').close()
 
     @property
@@ -262,6 +263,10 @@ class FileHandler:
 
     @property
     def set(self):
+        data_lines = self.list
+        if len(data_lines) > self.threshold:
+            ld = len(data_lines)
+            self.save_list(self.list[ld-self.threshold:])
         return set(self.list)
 
     def __iter__(self):
