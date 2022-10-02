@@ -211,6 +211,12 @@ def rss_set_update(update, context):
         editMessage("Rss Started", msg)
         LOGGER.info("Rss Started")
 
+
+def clean_title(title):
+    removed = ['[TGx]', '[rartv]', 'eztv.re']
+    title = clean_name(title)
+    return title
+
 def rss_monitor(context):
     with rss_dict_lock:
         if len(rss_dict) == 0:
@@ -219,7 +225,7 @@ def rss_monitor(context):
         rss_saver = rss_dict
     for name, data in rss_saver.items():
         try:
-            LOGGER.info(f'Parsing... [{name}]')
+            # LOGGER.info(f'Parsing... [{name}]')
             rss_d = feedparse(data[0])
             if not rss_d.entries:
                 continue
@@ -234,6 +240,12 @@ def rss_monitor(context):
                 if len(rss_d.entries) == feed_count:
                     break
                 try:
+                    url = rss_d.entries[feed_count]['links'][1]['href']
+                except IndexError:
+                    url = rss_d.entries[feed_count]['link']
+                link_name = rss_d.entries[feed_count]['title']
+                clean_title = link_name
+                try:
                     # LOGGER.info("Going to check blackList Category")
                     if rss_d.entries[feed_count].get('category') and any(x in str(rss_d.entries[feed_count]['category']).lower() for x in BLOCKED_CATEGORIES):
                         parse = False
@@ -241,9 +253,10 @@ def rss_monitor(context):
                         # LOGGER.warning("This category is blacklist")
                         continue
                     # LOGGER.info("Going to check blackList Names")
-                    if any(x.lower() in str(rss_d.entries[feed_count]['title']).lower() for x in black_lists_file.list):
+                    if any(x.lower() in str(link_name).lower() for x in black_lists_file.list) or \
+                       any(x.lower() in str(url).lower() for x in black_lists_file.list):
                         # sendRss(text='Blocking [{}]'.format(rss_d.entries[feed_count]['title']), bot=context.bot)
-                        LOGGER.warning('Blocking [{}]'.format(rss_d.entries[feed_count]['title']))
+                        # LOGGER.warning('Blocking [{}]'.format(rss_d.entries[feed_count]['title']))
                         parse = False
                         feed_count += 1
                         continue
@@ -255,31 +268,28 @@ def rss_monitor(context):
                     break
 
                 # LOGGER.info("Going to check send it before or not")
-                if data[1] in send_rss_file.set or data[0] in send_rss_file_name.set:
+                if url in send_rss_file.set or link_name in send_rss_file_name.set or clean_title(link_name) in send_rss_file_name.set:
                     # LOGGER.warning('Added before [{}]'.format(rss_d.entries[feed_count]['title']))
                     feed_count += 1
                     continue
                 else:
-                    send_rss_file_name.append(data[0])
-                    send_rss_file.append(data[1])
+                    send_rss_file_name.append(clean_title(link_name))
+                    send_rss_file.append(url)
                 # LOGGER.info("Going to check filters")
                 for link_list in data[3]:
-                    if not any(clean_name(x.lower()) in clean_name(str(rss_d.entries[feed_count]['title']).lower()) for x in link_list):
+                    if not any(clean_name(x.lower()) in clean_name(str(link_name).lower()) for x in link_list):
                         parse = False
                         feed_count += 1
                         break
                 if not parse:
                     continue
-                try:
-                    url = rss_d.entries[feed_count]['links'][1]['href']
-                except IndexError:
-                    url = rss_d.entries[feed_count]['link']
                 if RSS_COMMAND is not None:
                     feed_msg = f"{RSS_COMMAND} {url}"
                 else:
-                    feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title'].replace('>', '').replace('<', '')}</code>\n\n"
+                    feed_msg = f"<b>Name: </b><code>{link_name.replace('>', '').replace('<', '')}</code>\n\n"
                     feed_msg += f"<b>Link: </b><code>{url}</code>"
                 sendRss(feed_msg, context.bot)
+                sleep(0.1)
                 try:
                     client_app.send_message(chat_id='@GemAIOBot', text=f'/leech {url}')
                 except Exception as error:
