@@ -34,8 +34,8 @@ except Exception as f:
 
 def start(update, context):
     buttons = ButtonMaker()
-    buttons.buildbutton("Repo", "https://www.github.com/Appeza/tg-mirror-leech-bot")
-    buttons.buildbutton("Report Group", "https://t.me/+TWOOFONY5TZAgIgL")
+    buttons.buildbutton("GemMovie", "https://t.me/gemovie_Support")
+    buttons.buildbutton("PapkornBot", "https://t.me/PapkornBot")
     reply_markup = InlineKeyboardMarkup(buttons.build_menu(2))
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
         start_string = f'''
@@ -176,7 +176,7 @@ help_string = f'''
 /{BotCommands.ShellCommand}: Run commands in Shell (Only Owner)
 
 /{BotCommands.ExecHelpCommand}: Get help for Executor module (Only Owner)
-'''
+''' + help_string_telegraph.replace('<br>', '')
 
 def bot_help(update, context):
     button = ButtonMaker()

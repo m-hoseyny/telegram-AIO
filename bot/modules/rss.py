@@ -23,7 +23,7 @@ send_rss_file_name = FileHandler('rss_name.db')
 
 
 def clean_name(name):
-    res = re.sub(r'[^\w\s]', '', name)
+    res = re.sub(r'[^\w\s]', ' ', name)
     res = res.lower()
     return res
 
@@ -158,22 +158,26 @@ def rss_unsub(update, context):
 
 def rss_blacklist_add(update, context):
     try:
-        args = update.message.text.split(" ")
+        args = update.message.text.split("f:")
         new_bl = ''
-        if len(args) > 2:
-            filters = args[1:]
-            for filter in filters:
-                black_lists_file.append(filter)
+        if len(args) == 2:
+            filters = args[1]
+            filters = filters.split('|')
+            LOGGER.info(f"filters {filters}")
+            for f in filters:
+                black_lists_file.append(f)
                 new_bl = '\n'.join(filters)
         black_list_str = ', '.join(black_lists_file.list)
         sendMessage(f"Rss blacklists:\nNew<code>{new_bl}</code>\nTotal:\n<code>{black_list_str}</code>", context.bot, update.message)
-        LOGGER.info(f"Rss blacklists added")
+        LOGGER.info(f"Rss blacklists added {args}")
     except IndexError:
         sendMessage(f"Use this format to remove feed url:\n/{BotCommands.RssBLCommand} Title", context.bot, update.message)
+    except Exception as e:
+        sendMessage(f"error :\n/{e}")
 
 def rss_settings(update, context):
     buttons = button_build.ButtonMaker()
-    buttons.sbutton("Unsubscribe All", "rss unsuball")
+    # buttons.sbutton("Unsubscribe All", "rss unsuball")
     if rss_job.enabled:
         buttons.sbutton("Pause", "rss pause")
     else:
@@ -214,18 +218,23 @@ def rss_set_update(update, context):
 
 def clean_title(title):
     removed = ['[TGx]', '[rartv]', 'eztv.re']
+    for r in removed:
+        title = title.replace(r, '')
     title = clean_name(title)
     return title
 
 def rss_monitor(context):
+    print('---------------------------------------')
     with rss_dict_lock:
         if len(rss_dict) == 0:
             rss_job.enabled = False
             return
         rss_saver = rss_dict
+    LOGGER.warning(2)
     for name, data in rss_saver.items():
+        print(3)
         try:
-            # LOGGER.info(f'Parsing... [{name}]')
+            LOGGER.warning(f'Parsing... [{name}]')
             rss_d = feedparse(data[0])
             if not rss_d.entries:
                 continue
@@ -233,7 +242,7 @@ def rss_monitor(context):
             last_title = rss_d.entries[0]['title']
             # if data[1] == last_link or data[2] == last_title:
             #     continue
-            # LOGGER.info('Data is : {}'.format(data))
+            LOGGER.warning('Data is : {}'.format(data))
             feed_count = 0
             while True:
                 parse = True
@@ -244,19 +253,18 @@ def rss_monitor(context):
                 except IndexError:
                     url = rss_d.entries[feed_count]['link']
                 link_name = rss_d.entries[feed_count]['title']
-                clean_title = link_name
                 try:
-                    # LOGGER.info("Going to check blackList Category")
+                    LOGGER.info("Going to check blackList Category")
                     if rss_d.entries[feed_count].get('category') and any(x in str(rss_d.entries[feed_count]['category']).lower() for x in BLOCKED_CATEGORIES):
                         parse = False
                         feed_count += 1
                         # LOGGER.warning("This category is blacklist")
                         continue
-                    # LOGGER.info("Going to check blackList Names")
+                    LOGGER.info("Going to check blackList Names")
                     if any(x.lower() in str(link_name).lower() for x in black_lists_file.list) or \
                        any(x.lower() in str(url).lower() for x in black_lists_file.list):
                         # sendRss(text='Blocking [{}]'.format(rss_d.entries[feed_count]['title']), bot=context.bot)
-                        # LOGGER.warning('Blocking [{}]'.format(rss_d.entries[feed_count]['title']))
+                        LOGGER.warning('Blocking [{}]'.format(rss_d.entries[feed_count]['title']))
                         parse = False
                         feed_count += 1
                         continue
@@ -267,7 +275,7 @@ def rss_monitor(context):
                     LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {name}. Maybe you need to add less RSS_DELAY to not miss some torrents: [{e}]")
                     break
 
-                # LOGGER.info("Going to check send it before or not")
+                LOGGER.info("Going to check send it before or not")
                 if url in send_rss_file.set or link_name in send_rss_file_name.set or clean_title(link_name) in send_rss_file_name.set:
                     # LOGGER.warning('Added before [{}]'.format(rss_d.entries[feed_count]['title']))
                     feed_count += 1
@@ -275,7 +283,7 @@ def rss_monitor(context):
                 else:
                     send_rss_file_name.append(clean_title(link_name))
                     send_rss_file.append(url)
-                # LOGGER.info("Going to check filters")
+                LOGGER.info("Going to check filters")
                 for link_list in data[3]:
                     if not any(clean_name(x.lower()) in clean_name(str(link_name).lower()) for x in link_list):
                         parse = False
@@ -321,5 +329,5 @@ if DB_URI is not None and RSS_CHAT_ID is not None:
     dispatcher.add_handler(rss_settings_handler)
     dispatcher.add_handler(rss_buttons_handler)
     dispatcher.add_handler(rss_blacklist_handler)
-    rss_job = job_queue.run_repeating(rss_monitor, interval=RSS_DELAY, first=20, name="RSS")
+    rss_job = job_queue.run_repeating(rss_monitor, interval=RSS_DELAY, first=5, name="RSS")
     rss_job.enabled = True
