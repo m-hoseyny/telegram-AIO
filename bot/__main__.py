@@ -52,18 +52,27 @@ def restart(update, context):
     restart_message = sendMessage("Restarting...", context.bot, update.message)
     if Interval:
         Interval[0].cancel()
-    alive.kill()
-    procs = psprocess(web.pid)
-    for proc in procs.children(recursive=True):
-        proc.kill()
-    procs.kill()
+    try:
+        alive.kill()
+    except Exception as e:
+        print(f"kill alive {e}")
+    try:
+        procs = psprocess(web.pid)
+        for proc in procs.children(recursive=True):
+            proc.kill()
+        procs.kill()
+    except Exception as e:
+        print(f"kill process {e}")
     clean_all()
     srun(["python3", "update.py"])
     # nox.kill()
-    a2cproc = psprocess(a2c.pid)
-    for proc in a2cproc.children(recursive=True):
-        proc.kill()
-    a2cproc.kill()
+    try:
+        a2cproc = psprocess(a2c.pid)
+        for proc in a2cproc.children(recursive=True):
+            proc.kill()
+        a2cproc.kill()
+    except Exception as e:
+        print(f"kill aria2 {e}")
     with open(".restartmsg", "w") as f:
         f.truncate(0)
         f.write(f"{restart_message.chat.id}\n{restart_message.message_id}\n")
