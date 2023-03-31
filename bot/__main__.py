@@ -39,8 +39,10 @@ def start(update, context):
     reply_markup = InlineKeyboardMarkup(buttons.build_menu(2))
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
         start_string = f'''
-This bot can mirror all your links to Google Drive!
-Type /{BotCommands.HelpCommand} to get a list of available commands
+ربات اپلودر جم موی! 
+اپلود لینک مستقیم و تورنت داخل تلگرام
+:نحوه استفاده
+ /{BotCommands.HelpCommand}
 '''
         sendMarkup(start_string, context.bot, update.message, reply_markup)
     else:
@@ -178,11 +180,29 @@ help_string = f'''
 /{BotCommands.ExecHelpCommand}: Get help for Executor module (Only Owner)
 ''' + help_string_telegraph.replace('<br>', '')
 
+bot_help_users = '''
+برای استفاده دستور 
+/leech
+را بزنید و جلوی آن لینک خود را قرار دهید
+
+یا لینک را ارسال کنید و روی آن ریپلای کنید و سپس فقط دستور /leech را بزنید
+
+برای تورنت و لینک مستقیم هر دو کار میکند.
+
+'''
+
 def bot_help(update, context):
     button = ButtonMaker()
     button.buildbutton("Other Commands", f"https://telegra.ph/{help}")
     reply_markup = InlineKeyboardMarkup(button.build_menu(1))
     sendMarkup(help_string, context.bot, update.message, reply_markup)
+
+def bot_help_users_handler(update, context):
+    button = ButtonMaker()
+    button.buildbutton("Other Commands", f"https://telegra.ph/{help}")
+    reply_markup = InlineKeyboardMarkup(button.build_menu(1))
+    sendMarkup(bot_help_users, context.bot, update.message, reply_markup)
+
 
 botcmds = [
 
@@ -245,15 +265,20 @@ def main():
     restart_handler = CommandHandler(BotCommands.RestartCommand, restart,
                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     help_handler = CommandHandler(BotCommands.HelpCommand,
-                                  bot_help, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                  bot_help_users_handler, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+    help_handlerAdmin = CommandHandler(f'helpAdmin',
+                                  bot_help, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     log_handler = CommandHandler(BotCommands.LogCommand, log, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
 
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(ping_handler)
     dispatcher.add_handler(restart_handler)
     dispatcher.add_handler(help_handler)
+    dispatcher.add_handler(help_handlerAdmin)
     dispatcher.add_handler(log_handler)
     updater.start_polling(drop_pending_updates=IGNORE_PENDING_REQUESTS)
+    from bot.helper.ext_utils.db_handler import DbManger
+    DbManger().setting_update(name='OUTOFSERVICE', value='1')
     LOGGER.info("Bot Started!")
     signal.signal(signal.SIGINT, exit_clean_up)
     if rss_session is not None:
@@ -262,7 +287,7 @@ def main():
 app.start()
 
 client_app.start()
-# print(client_app.me)
+print(client_app.me)
 # app.me = client_app.me
 # print(app.me)
 main()

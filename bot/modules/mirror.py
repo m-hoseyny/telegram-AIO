@@ -14,7 +14,7 @@ from telegram import InlineKeyboardMarkup
 
 from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, \
                 BUTTON_SIX_NAME, BUTTON_SIX_URL, BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, QB_SEED, \
-                dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER, client_app
+                dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER, client_app, job_queue
 from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_gdtot_link, is_mega_link, is_gdrive_link, get_content_type, get_mega_link_type
 from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split as fssplit, clean_download
 from bot.helper.ext_utils.shortenurl import short_url
@@ -34,7 +34,7 @@ from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.upload_utils.pyrogramEngine import TgUploader
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages, forwardMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages, forwardMessage, sendRss
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
 
@@ -343,6 +343,10 @@ class MirrorListener:
             update_all_messages()
 
 def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None):
+    # setting = DbManger().get_setting(name='OUTOFSERVICE')
+    # if int(setting[1]) == 0:
+    #     sendMessage('بات در دست تعمیر است', bot, message)
+    #     return 
     mesg = message.text.split('\n')
     message_args = mesg[0].split(' ', maxsplit=1)
     name_args = mesg[0].split('|', maxsplit=1)
@@ -539,11 +543,21 @@ def pop_upload(update, context):
         active_uploads.clear()
         tg = upload_lists.pop()
         active_uploads.append(tg.uid)
-        LOGGER.info('begin to another upload'.format(tg.uid))
+        sendRss('Activate Another upload', context.bot)
         Thread(target=tg.upload).start()
     except Exception as e:
-        LOGGER.error('Pop Upload {}'.format(e))
+        sendRss(f'error in actication {e}', context.bot)
         pass
+
+
+def check_active_upload(context):
+    LOGGER.info('Check Active Upload')
+    if upload_lists and not active_uploads:
+        LOGGER.info('Stuck Active Upload. Activate another')
+        tg = upload_lists.pop()
+        active_uploads.append(tg.uid)
+        Thread(target=tg.upload).start()
+        sendRss('Activate Another upload', context.bot)
 
 
 def limit_changer(update, context):
@@ -556,6 +570,20 @@ def limit_changer(update, context):
     reply = sendMessage(f"Limit changed to {setting}GB", context.bot, update.message)
 
 
+def out_of_service_changer(update, context):
+    args = update.message.text.split(" ")
+    from bot.helper.ext_utils.db_handler import DbManger
+    value = DbManger().get_setting(name='OUTOFSERVICE')
+    setting = int(value[1])
+    if setting == 0:
+        setting = 1
+    else:
+        setting = 1
+    DbManger().setting_update(name='OUTOFSERVICE', value=setting)
+    setting = DbManger().get_setting(name='OUTOFSERVICE')
+    reply = sendMessage(f"Out of Service changed to {setting}", context.bot, update.message)
+
+check_upload = job_queue.run_repeating(check_active_upload, interval=10, first=5, name="CheckActiveUpload")
 
 mirror_handler = CommandHandler(BotCommands.MirrorCommand, mirror,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)

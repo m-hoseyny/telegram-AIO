@@ -14,7 +14,7 @@ from bot.helper.ext_utils.bot_utils import get_readable_file_size
 LOGGER = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
 
-VIDEO_SUFFIXES = ("MKV", "MP4", "MOV", "WMV", "3GP", "MPG", "WEBM", "AVI", "FLV", "M4V", "GIF")
+VIDEO_SUFFIXES = ('3GP', 'ASF', 'AVI', 'DIVX', 'DV', 'DAT', 'FLV', 'GXF', 'M2P', 'M2TS', 'M2V', 'M4V', 'MKV', 'MOOV', 'MOV', 'MP4', 'MPEG', 'MPEG1', 'MPEG2', 'MPEG4', 'MPG', 'MPV', 'MT2S', 'TS', 'MTS', 'MXF', 'OGM', 'OGV', 'PS', 'QT', 'RM', 'RMVB', 'VOB', 'WEBM', 'WM', 'WMV')
 AUDIO_SUFFIXES = ("MP3", "M4A", "M4B", "FLAC", "WAV", "AIF", "OGG", "AAC", "DTS", "MID", "AMR", "MKA")
 IMAGE_SUFFIXES = ("JPG", "JPX", "PNG", "WEBP", "CR2", "TIF", "BMP", "JXR", "PSD", "ICO", "HEIC", "JPEG")
 

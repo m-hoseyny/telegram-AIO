@@ -276,13 +276,19 @@ def rss_monitor(context):
                     break
 
                 LOGGER.info("Going to check send it before or not")
-                if url in send_rss_file.set or link_name in send_rss_file_name.set or clean_title(link_name) in send_rss_file_name.set:
-                    # LOGGER.warning('Added before [{}]'.format(rss_d.entries[feed_count]['title']))
+                try:
+                    if url in send_rss_file.set or link_name in send_rss_file_name.set or clean_title(link_name) in send_rss_file_name.set:
+                        # LOGGER.warning('Added before [{}]'.format(rss_d.entries[feed_count]['title']))
+                        feed_count += 1
+                        continue
+                    else:
+                        send_rss_file_name.append(clean_title(link_name))
+                        send_rss_file.append(url)
+                except Exception as e:
+                    LOGGER.error(f'Error in parsing name: {e}')
                     feed_count += 1
+                    parse = False
                     continue
-                else:
-                    send_rss_file_name.append(clean_title(link_name))
-                    send_rss_file.append(url)
                 LOGGER.info("Going to check filters")
                 for link_list in data[3]:
                     if not any(clean_name(x.lower()) in clean_name(str(link_name).lower()) for x in link_list):
